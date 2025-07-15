@@ -21,11 +21,17 @@
     flex-wrap: wrap;
     gap: 8px;
   }
+  .radio-group.position-row {
+    display: flex;
+    flex-direction: row;
+    gap: 8px;
+    width: 100%;
+  }
   .radio-option {
     display: flex;
     align-items: center;
     justify-content: flex-start;
-    flex: 0 0 calc(50% - 8px);
+    flex: 1 1 calc(50% - 8px);
     box-sizing: border-box;
     padding: 4px 8px;
     height: 48px;
@@ -38,8 +44,17 @@
     transition: border 0.15s;
     position: relative;
   }
+  .radio-group.position-row .radio-option {
+    flex: 1 1 calc(20% - 8px);
+    justify-content: center;
+    text-align: center;
+  }
   .radio-option.selected {
     border: 2px solid #1D4ED8;
+  }
+  .radio-group.position-row .radio-option.selected {
+    border: 2px solid #1D4ED8;
+    z-index: 1;
   }
   .radio-option input[type="radio"] {
     display: none;
@@ -166,6 +181,31 @@
   <div class="radio-group" id="projectRadioGroup"></div>
   <div id="projectEmptyTip" class="project-empty-tip" style="display:none;">
     You have no projects yet. Please create a project in the plugin settings.
+  </div>
+</div>
+<div class="row">
+  <h4>Positioning</h4>
+  <div class="radio-group position-row" id="positionRadioGroup">
+    <label class="radio-option">
+      <input type="radio" name="position" value="auto" checked>
+      <span>Auto</span>
+    </label>
+    <label class="radio-option">
+      <input type="radio" name="position" value="left">
+      <span>Left</span>
+    </label>
+    <label class="radio-option">
+      <input type="radio" name="position" value="right">
+      <span>Right</span>
+    </label>
+    <label class="radio-option">
+      <input type="radio" name="position" value="top">
+      <span>Top</span>
+    </label>
+    <label class="radio-option">
+      <input type="radio" name="position" value="bottom">
+      <span>Bottom</span>
+    </label>
   </div>
 </div>
 <button id="create" class="footer-btn" disabled>Create</button>
@@ -301,6 +341,33 @@ document.addEventListener('keydown', function(e) {
   }
 });
 
+// 定位 radio btn 樣式與互動
+function updatePositionRadioStyles() {
+  const labels = Array.from(document.querySelectorAll('#positionRadioGroup .radio-option'));
+  labels.forEach(label => {
+    const input = label.querySelector('input[type="radio"]');
+    if (input && input.checked) {
+      label.classList.add('selected');
+    } else {
+      label.classList.remove('selected');
+    }
+  });
+}
+document.querySelectorAll('#positionRadioGroup input[type="radio"]').forEach(radio => {
+  radio.addEventListener('change', updatePositionRadioStyles);
+});
+updatePositionRadioStyles();
+
+function getSelectedPosition() {
+  const radios = document.getElementsByName('position');
+  for (let i = 0; i < radios.length; i++) {
+    if (radios[i].checked) {
+      return radios[i].value;
+    }
+  }
+  return "auto";
+}
+
 // 接收 textContent 與 project list
 window.onmessage = (event) => {
   const { pluginMessage } = event.data;
@@ -331,7 +398,8 @@ createBtn.onclick = () => {
   const project = getSelectedProject();
   const key = input.value;
   const valid = /^[a-z0-9\-\_\.]+$/.test(key);
-  console.log('[annotate-ui] createBtn.onclick', { project, key, valid });
+  const dir = getSelectedPosition();
+  console.log('[annotate-ui] createBtn.onclick', { project, key, valid, dir });
 
   if (!key || !valid) {
     errorMsg.style.display = 'block';
@@ -340,8 +408,8 @@ createBtn.onclick = () => {
     errorMsg.style.display = 'none';
   }
 
-  parent.postMessage({ pluginMessage: { type: 'create-shapes', project, key } }, '*');
-  console.log('[annotate-ui] sent create-shapes', { project, key });
+  parent.postMessage({ pluginMessage: { type: 'create-shapes', project, key, direction: dir } }, '*');
+  console.log('[annotate-ui] sent create-shapes', { project, key, direction: dir });
   input.value = "";
   validateInput();
   input.focus();
