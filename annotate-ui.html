@@ -1,0 +1,349 @@
+<style>
+  body {
+    font-family: 'Segoe UI', 'Helvetica Neue', Arial, 'Liberation Sans', 'Nimbus Sans', 'sans-serif';
+    margin: 0;
+    padding: 16px;
+    background: #fff;
+  }
+  h4 {
+    margin: 0 0 8px 0;
+    font-weight: 600;
+    font-size: 16px;
+    font-family: inherit;
+  }
+  .row {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 16px;
+  }
+  .radio-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .radio-option {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    flex: 0 0 calc(50% - 8px);
+    box-sizing: border-box;
+    padding: 4px 8px;
+    height: 48px;
+    border: 1px solid #E6E6E6;
+    border-radius: 4px;
+    font-size: 16px;
+    font-family: inherit;
+    background: #fff;
+    gap: 8px;
+    transition: border 0.15s;
+    position: relative;
+  }
+  .radio-option.selected {
+    border: 2px solid #1D4ED8;
+  }
+  .radio-option input[type="radio"] {
+    display: none;
+  }
+  .radio-hotkey {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 18px;
+    height: 18px;
+    border: 1px solid #E6E6E6;
+    border-radius: 2px;
+    background: #f5f5f5;
+    color: #888;
+    font-size: 8px;
+    font-weight: 400;
+    margin-left: auto;
+    user-select: none;
+    padding: 0 4px;
+  }
+  .full-width {
+    width: 100%;
+    box-sizing: border-box;
+    font-family: inherit;
+    font-size: 15px;
+    padding: 8px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    transition: border-color 0.15s, box-shadow 0.15s;
+  }
+  .full-width:focus {
+    border-color: #1D4ED8;
+    box-shadow: 0 0 0 2px #1D4ED833;
+  }
+  .input-desc {
+    font-size: 13px;
+    color: #888;
+    margin-top: 4px;
+    margin-bottom: 0;
+    user-select: none;
+  }
+  #create {
+    bottom: 16px;
+    width: 100%;
+    margin: 0 0 16px 0;
+    padding: 10px 0;
+    font-size: 16px;
+    font-family: inherit;
+    background: #1D4ED8;
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  .footer-btn {
+    position: fixed;
+    left: 16px;
+    right: 16px;
+    bottom: 16px;
+    max-width: calc(100vw - 32px);
+    width: 100%;
+    margin: 0;
+    z-index: 10;
+    box-sizing: border-box;
+  }
+  #create:disabled {
+    background: #b3c7e6;
+    cursor: not-allowed;
+  }
+  #errorMsg {
+    color: red;
+    display: none;
+    margin-top: 4px;
+    font-size: 13px;
+  }
+  #preview {
+    background: #fafafa;
+    border-radius: 4px;
+    min-height: 80px;
+    padding: 12px;
+    margin-bottom: 16px;
+    font-size: 15px;
+    color: #333;
+    word-break: break-all;
+  }
+  #preview h5 {
+    margin: 0 0 8px 0;
+    font-size: 14px;
+    font-weight: 600;
+    color: #888;
+    font-family: inherit;
+  }
+  #previewContent {
+    font-size: 17.6px;
+    line-height: 1.5;
+    display: block;
+    margin-top: 0;
+    margin-bottom: 0;
+  }
+  .project-empty-tip {
+    color: #e00;
+    font-size: 15px;
+    margin: 24px 0 0 0;
+    text-align: center;
+    font-weight: 500;
+  }
+  body {
+    padding-bottom: 72px;
+  }
+</style>
+<div id="preview">
+  <h5>content preview</h5>
+  <span id="previewContent">Please select a text node to annotate.</span>
+</div>
+<div class="row">
+  <h4>Name Your Key</h4>
+  <input id="customInput" class="full-width" type="text" pattern="[A-Za-z0-9\-\_\.]*" title="只能輸入小寫英文、數字、-、_、.">
+  <div class="input-desc"> You can only use lowercase letters, numbers, -, _, and . for key names.</div>
+  <div id="errorMsg">Please enter a valid lokalise key name</div>
+</div>
+<div class="row">
+  <h4>Choose Lokalise Project</h4>
+  <div class="radio-group" id="projectRadioGroup"></div>
+  <div id="projectEmptyTip" class="project-empty-tip" style="display:none;">
+    You have no projects yet. Please create a project in the plugin settings.
+  </div>
+</div>
+<button id="create" class="footer-btn" disabled>Create</button>
+<script>
+let projectList = [];
+
+// 從 plugin 主程式取得專案資料
+function requestProjectList() {
+  console.log('[annotate-ui] requestProjectList');
+  parent.postMessage({ pluginMessage: { type: "get-projects" } }, "*");
+}
+
+// 取得專案資料（同步變數）
+function getProjectList() {
+  console.log('[annotate-ui] getProjectList', projectList);
+  return projectList;
+}
+
+function renderProjectRadios() {
+  const radioGroup = document.getElementById('projectRadioGroup');
+  const tip = document.getElementById('projectEmptyTip');
+  radioGroup.innerHTML = '';
+  const projects = getProjectList();
+  console.log('[annotate-ui] renderProjectRadios', projects);
+  if (!projects.length) {
+    tip.style.display = '';
+    document.getElementById('create').disabled = true;
+    return;
+  }
+  tip.style.display = 'none';
+  projects.forEach((proj, idx) => {
+    const label = document.createElement('label');
+    label.className = 'radio-option';
+    label.innerHTML = `
+      <input type="radio" name="project" value="${proj}">
+      <span>${proj}</span>
+      <span class="radio-hotkey">${idx + 1}</span>
+    `;
+    radioGroup.appendChild(label);
+  });
+  window.radioInputs = Array.from(document.querySelectorAll('input[name="project"]'));
+  window.radioLabels = Array.from(document.querySelectorAll('.radio-option'));
+  window.radioInputs.forEach(radio => {
+    radio.addEventListener('change', () => {
+      console.log('[annotate-ui] project radio changed:', radio.value);
+      validateInput();
+      updateRadioStyles();
+    });
+  });
+  updateRadioStyles();
+  validateInput();
+  // 預設選第一個
+  if (window.radioInputs.length && !window.radioInputs.some(r => r.checked)) {
+    window.radioInputs[0].checked = true;
+    window.radioInputs[0].dispatchEvent(new Event('change', { bubbles: true }));
+  }
+}
+
+function getSelectedProject() {
+  const radios = document.getElementsByName('project');
+  for (let i = 0; i < radios.length; i++) {
+    if (radios[i].checked) {
+      console.log('[annotate-ui] getSelectedProject', radios[i].value);
+      return radios[i].value;
+    }
+  }
+  console.log('[annotate-ui] getSelectedProject null');
+  return null;
+}
+
+const createBtn = document.getElementById('create');
+const input = document.getElementById('customInput');
+const errorMsg = document.getElementById('errorMsg');
+const previewContent = document.getElementById('previewContent');
+
+function validateInput() {
+  const value = input.value;
+  const valid = /^[a-z0-9\-\_\.]+$/.test(value);
+  const projects = getProjectList();
+  const project = getSelectedProject();
+  console.log('[annotate-ui] validateInput', { value, valid, projects, project });
+  if (!projects.length) {
+    createBtn.disabled = true;
+    errorMsg.style.display = 'none';
+    return;
+  }
+  if (value.length === 0 || !valid || !project) {
+    createBtn.disabled = true;
+    errorMsg.style.display = (value.length === 0 || !project) ? 'none' : 'block';
+  } else {
+    createBtn.disabled = false;
+    errorMsg.style.display = 'none';
+  }
+}
+
+input.addEventListener('input', function(e) {
+  this.value = this.value.toLowerCase().replace(/[^a-z0-9\-\_\.]/g, '');
+  console.log('[annotate-ui] input changed', this.value);
+  validateInput();
+});
+
+function updateRadioStyles() {
+  if (!window.radioLabels) return;
+  window.radioLabels.forEach(label => {
+    const input = label.querySelector('input[type="radio"]');
+    if (input && input.checked) {
+      label.classList.add('selected');
+    } else {
+      label.classList.remove('selected');
+    }
+  });
+}
+
+document.addEventListener('change', function(e) {
+  if (e.target.name === 'project') {
+    console.log('[annotate-ui] project radio changed (document event)', e.target.value);
+    validateInput();
+    updateRadioStyles();
+  }
+});
+
+// 支援 1~9 快捷鍵選擇 radio（input 沒 focus 時）
+document.addEventListener('keydown', function(e) {
+  if (document.activeElement !== input && window.radioInputs) {
+    const idx = parseInt(e.key, 10) - 1;
+    if (!isNaN(idx) && window.radioInputs[idx]) {
+      window.radioInputs[idx].checked = true;
+      window.radioInputs[idx].dispatchEvent(new Event('change', { bubbles: true }));
+      updateRadioStyles();
+      e.preventDefault();
+      console.log('[annotate-ui] radio hotkey selected', idx);
+    }
+  }
+});
+
+// 接收 textContent 與 project list
+window.onmessage = (event) => {
+  const { pluginMessage } = event.data;
+  console.log('[annotate-ui] window.onmessage', pluginMessage);
+  if (pluginMessage && pluginMessage.type === 'content-result') {
+    if (pluginMessage.content) {
+      previewContent.textContent = pluginMessage.content;
+    } else {
+      previewContent.textContent = "請選取要新增 lokalise key 的字串";
+    }
+  }
+  if (pluginMessage && pluginMessage.type === 'project-list') {
+    projectList = Array.isArray(pluginMessage.projects) ? pluginMessage.projects : [];
+    renderProjectRadios();
+    validateInput();
+  }
+};
+
+window.onload = () => {
+  console.log('[annotate-ui] window.onload');
+  requestProjectList();
+  parent.postMessage({ pluginMessage: { type: 'get-content', key: '', project: '' } }, '*');
+  parent.postMessage({ pluginMessage: { type: 'resize', width: document.body.scrollWidth, height: document.body.scrollHeight } }, '*');
+  input.focus();
+};
+
+createBtn.onclick = () => {
+  const project = getSelectedProject();
+  const key = input.value;
+  const valid = /^[a-z0-9\-\_\.]+$/.test(key);
+  console.log('[annotate-ui] createBtn.onclick', { project, key, valid });
+
+  if (!key || !valid) {
+    errorMsg.style.display = 'block';
+    return;
+  } else {
+    errorMsg.style.display = 'none';
+  }
+
+  parent.postMessage({ pluginMessage: { type: 'create-shapes', project, key } }, '*');
+  console.log('[annotate-ui] sent create-shapes', { project, key });
+  input.value = "";
+  validateInput();
+  input.focus();
+}
+</script>

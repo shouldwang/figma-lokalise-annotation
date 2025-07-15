@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Lokalise Project Setting</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', 'Helvetica Neue', Arial, 'Liberation Sans', 'Nimbus Sans', 'sans-serif';
+      margin: 0;
+      background: #fff;
+      height: 100vh;
+      /* 移除 padding */
+    }
+    .center {
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-start;
+      height: 100vh;
+      padding: 16px;
+      box-sizing: border-box;
+    }
+    .desc { font-size: 16px; color: #666; margin-bottom: 16px; line-height: 1.5; }
+    textarea {
+      flex: 1 1 0;
+      min-height: 0;
+      width: 100%;
+      box-sizing: border-box;
+      padding: 10px;
+      resize: none;
+      line-height: 1.5;
+      font-size: 16px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
+    textarea::placeholder {
+      line-height: 1.5;
+    }
+    button {
+      font-size: 16px; padding: 10px 32px; border-radius: 4px; border: none;
+      background: #1D4ED8; color: #fff; font-weight: 600; cursor: pointer;
+      width: 100%;;
+      margin-top: 16px;
+    }
+    button:disabled { background: #b3c7e6; cursor: not-allowed; }
+    .err { color: #e00; font-size: 14px; margin-bottom: 8px; display: none; }
+  </style>
+</head>
+<body>
+  <div class="center">
+    <div class="desc">Please enter your Lokalise project name(s). If you have multiple, separate them with a comma (,).</div>
+    <textarea id="projectInput" placeholder="please enter project name(s)"></textarea>
+    <div class="err" id="errMsg"></div>
+    <button id="saveBtn" disabled>Save</button>
+  </div>
+  <script>
+    const input = document.getElementById('projectInput');
+    const btn = document.getElementById('saveBtn');
+    const err = document.getElementById('errMsg');
+
+    // 取得現有資料
+    function getProjectsFromPlugin() {
+      parent.postMessage({ pluginMessage: { type: "get-projects" } }, "*");
+    }
+
+    // 儲存資料
+    function saveProjectsToPlugin(arr) {
+      parent.postMessage({ pluginMessage: { type: "save-projects", projects: arr } }, "*");
+    }
+
+    function validate() {
+      const arr = input.value.split(',').map(s => s.trim()).filter(Boolean);
+      if (arr.length === 0) {
+        err.textContent = "Please enter at least one project name.";
+        err.style.display = 'block';
+        btn.disabled = true;
+        return false;
+      }
+      err.style.display = 'none';
+      btn.disabled = false;
+      return true;
+    }
+
+    input.addEventListener('input', validate);
+    input.addEventListener('keydown', e => {
+      if (e.key === 'Enter' && !btn.disabled) btn.click();
+    });
+
+    btn.onclick = function() {
+      if (!validate()) return;
+      const arr = input.value.split(',').map(s => s.trim()).filter(Boolean);
+      saveProjectsToPlugin(arr);
+    };
+
+    // 接收 plugin 回傳的資料
+    window.onmessage = function(event) {
+      const msg = event.data.pluginMessage;
+      if (!msg) return;
+      if (msg.type === "project-list") {
+        if (Array.isArray(msg.projects) && msg.projects.length) {
+          input.value = msg.projects.join(', ');
+        } else {
+          input.value = "";
+        }
+        validate();
+      }
+      if (msg.type === "save-success") {
+        parent.postMessage({ pluginMessage: { type: 'close-plugin' } }, '*');
+      }
+    };
+
+    // 初次載入時取得現有資料
+    window.onload = function() {
+      getProjectsFromPlugin();
+      validate();
+    };
+
+    // 支援 ESC 關閉
+    window.addEventListener('keydown', e => {
+      if (e.key === 'Escape') parent.postMessage({ pluginMessage: { type: 'close-plugin' } }, '*');
+    });
+  </script>
+</body>
+</html>

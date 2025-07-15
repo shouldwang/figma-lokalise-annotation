@@ -1,0 +1,788 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Lokalization List</title>
+  <style>
+    html, body {
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    body {
+      font-family: 'Segoe UI', 'Helvetica Neue', Arial, 'Liberation Sans', 'Nimbus Sans', 'sans-serif';
+      margin: 0;
+      padding: 8px;
+      background: #fff;
+      height: 100vh;
+      box-sizing: border-box;
+      display: flex;
+      flex-direction: column;
+    }
+    .info-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 12px;
+      min-height: 36px;
+      flex-direction: column;
+      align-items: stretch;
+    }
+    .info-bar > div:first-child {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      justify-content: flex-start;
+      min-height: 40px;
+      position: relative;
+    }
+    .info-bar .count {
+      font-size: 15px;
+      color: #333;
+    }
+    .info-bar .dup-warning {
+      color: #ff3333;
+      font-size: 14px;
+      font-weight: 600;
+      margin-top: 6px;
+      margin-bottom: 0;
+      white-space: pre-line;
+    }
+    .filter-dropdown {
+      position: relative;
+      display: inline-block;
+      margin-right: 0;
+    }
+    .dropdown {
+      position: relative;
+      display: inline-block;
+      margin-left: auto; /* 讓 exportBtn 貼齊最右 */
+    }
+    .filter-btn, #exportBtn, .search-input {
+      font-size: 14px;
+      font-weight: 600;
+      height: 40px;
+      border-radius: 4px;
+      border: 1px solid #1d4ed8;
+      box-sizing: border-box;
+      transition: background 0.15s, color 0.15s, border 0.15s;
+      display: flex;
+      align-items: center;
+    }
+
+    .filter-btn, #exportBtn {
+      padding: 0 16px;
+      cursor: pointer;
+    }
+    #exportBtn {
+      background: #1d4ed8;
+      color: #fff;
+      border: 1px solid #1d4ed8;
+    }
+    #exportBtn:disabled {
+      background: #e5e7eb;
+      color: #b3b3b3;
+      border: 1px solid #e5e7eb;
+      cursor: not-allowed;
+    }
+    .filter-menu {
+      display: none;
+      position: absolute;
+      right: 0;
+      top: 110%;
+      background: #fff;
+      border: 1px solid #eee;
+      border-radius: 4px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+      z-index: 200;
+      width: max-content;
+      min-width: 220px;
+      max-width: 50vw;
+      padding: 4px 0;
+    }
+    .filter-option {
+      padding: 8px 20px;
+      cursor: pointer;
+      font-size: 15px;
+      color: #222;
+      display: flex;
+      align-items: center;
+      transition: background 0.15s;
+    }
+    .filter-option:hover {
+      background: #f5f8ff;
+    }
+    .filter-option input[type="radio"] {
+      margin-right: 6px;
+    }
+    .filter-option .count-span {
+      color: #888;
+      margin-left: 4px;
+      font-size: 13px;
+    }
+    .search-input {
+      padding: 0 12px;
+      border: 1px solid #ccc;
+      background: #fff;
+      color: #222;
+      min-width: 160px;
+      margin-right: 0;
+      outline: none;
+      transition: border-color 0.15s;
+    }
+    .search-input:focus {
+      border-color: #1d4ed8;
+    }
+    .dropdown-menu {
+      display: none;
+      position: absolute;
+      right: 0;
+      top: 110%;
+      background: #fff;
+      border: 1px solid #eee;
+      border-radius: 4px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+      z-index: 200;
+      width: max-content;
+      min-width: 220px;
+      max-width: 50vw;
+      padding: 4px 0;
+    }
+    .dropdown-menu .dropdown-item {
+      padding: 12px 20px;
+      cursor: pointer;
+      font-size: 15px;
+      color: #222;
+      transition: background 0.15s;
+    }
+    .dropdown-menu .dropdown-item:hover {
+      background: #f5f8ff;
+    }
+    .dropdown-menu .dropdown-item.disabled {
+      color: #ddd !important;
+      cursor: not-allowed !important;
+      pointer-events: none !important;
+    }
+    .export-count {
+      color: #888;
+      margin-left: 4px;
+      font-size: 13px;
+    }
+    .table-container {
+      flex: 1 1 auto;
+      min-height: 0;
+      height:100%;
+      display: flex;
+      flex-direction: column;
+      background: #fff;
+      border-radius: 4px;
+      overflow: hidden;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+    }
+    .scroll-table {
+      overflow-x: auto;
+      overflow-y: auto;
+      max-height: 100%;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background: #fff;
+      font-size: 15px;
+    }
+    th, td {
+      padding: 16px 16px;
+      border-bottom: 1px solid #dedede;
+      text-align: left;
+      line-height: 1.5;
+    }
+    th {
+      background: #f5f5f5;
+      font-size: 14px;
+      font-weight: 600;
+      color: #666;
+      position: sticky;
+      top: 0;
+    }
+    td {
+      font-size: 14px;
+      font-weight: 600;
+      color: #333;
+    }
+    .row-duplicate {
+      background: rgba(255,0,0,0.10);
+    }
+    .input-inline, .select-inline {
+      font-size: 14px;
+      padding: 4px 8px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      width: 100%;
+      box-sizing: border-box;
+    }
+    .input-inline:focus, .select-inline:focus {
+      outline: none;
+      border-color: #1d4ed8;
+    }
+    .error-msg {
+      color: #ff3333;
+      font-size: 12px;
+      margin-top: 2px;
+      margin-bottom: 0;
+    }
+    th:nth-child(1), td:nth-child(1) { width: 15%; }
+    th:nth-child(2), td:nth-child(2) { width: 20%; }
+    th:nth-child(3), td:nth-child(3) { width: 40%; }
+    th:nth-child(4), td:nth-child(4) { width: 25%; }
+    .dup-warning-list {
+      color: #ff3333;
+      font-size: 14px;
+      font-weight: 600;
+      margin-top: 6px;
+      margin-bottom: 0;
+      white-space: pre-line;
+      background: rgba(255,0,0,0.05);
+      padding: 8px;
+      border-radius: 4px;
+    }
+    .action-btn-group {
+      display: flex;
+      flex-direction: row;
+      gap: 8px;
+    }
+
+    .action-btn {
+      height: 32px;
+      min-width: 64px;
+      padding: 0 16px;
+      border-radius: 4px;
+      font-size: 12px;
+      font-weight: 600;
+      box-sizing: border-box;
+      border: none;
+      outline: none;
+      cursor: pointer;
+      transition: background 0.15s, color 0.15s, border 0.15s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* Edit/Save: blue solid */
+    .action-btn.edit-btn, .action-btn.save-btn {
+      background: #1d4ed8;
+      color: #fff;
+      border: none;
+    }
+
+    /* Locate: blue outline */
+    .action-btn.locate-btn {
+      background: #fff;
+      color: #666;
+      border: 1.5px solid #666;
+    }
+
+    /* Delete: red outline */
+    .action-btn.delete-btn {
+      background: #fff;
+      color: #e00;
+      border: 1.5px solid #e00;
+    }
+  </style>
+</head>
+<body>
+  <div class="info-bar">
+    <div style="display: flex; align-items: center; gap: 8px; justify-content: flex-start;">
+      <input id="searchKey" class="search-input" type="text" placeholder="Search Key">
+      <div class="filter-dropdown" id="projectFilter">
+        <button id="filterBtn" class="filter-btn">projects: All <span id="filterCountSpan"></span> ▼</button>
+        <div id="filterMenu" class="filter-menu" style="display:none;">
+          <!-- 動態產生專案選項 -->
+        </div>
+      </div>
+      <div class="dropdown">
+        <button id="exportBtn" style="margin-left:auto;" disabled>Export csv ▼</button>
+        <div id="exportDropdown" class="dropdown-menu">
+          <!-- 動態產生專案選項 -->
+        </div>
+      </div>
+    </div>
+    <div id="dupWarningsContainer"></div>
+  </div>
+  <div class="table-container">
+    <div class="scroll-table">
+      <table id="lokaliseTable">
+        <thead>
+          <tr>
+            <th>project</th>
+            <th>key</th>
+            <th>EN String</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <!-- Data rows will be inserted here -->
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <script>
+let currentData = [];
+let editingIndex = null;
+let filterProject = "All";
+let searchKey = "";
+let showDupKeys = [];
+let projectList = []; // 新增：由 plugin 主程式傳來
+
+function getProjectList() {
+  // 改成回傳 plugin 主程式傳來的 projectList
+  return projectList;
+}
+
+// 動態產生 filter 與 export 專案選單
+function renderProjectFilterAndExport() {
+  const projects = getProjectList();
+  const filterMenu = document.getElementById('filterMenu');
+  const exportDropdown = document.getElementById('exportDropdown');
+  filterMenu.innerHTML = '';
+  exportDropdown.innerHTML = '';
+
+  // Filter: All
+  const allOpt = document.createElement('div');
+  allOpt.className = 'filter-option';
+  allOpt.setAttribute('data-value', 'All');
+  allOpt.innerHTML = `<input type="radio" name="projectFilter" value="All" checked> All <span class="count-span"></span>`;
+  filterMenu.appendChild(allOpt);
+
+  // Export: Google Sheet
+  const googleOpt = document.createElement('div');
+  googleOpt.className = 'dropdown-item';
+  googleOpt.setAttribute('data-action', 'google-sheet');
+  googleOpt.innerHTML = `Google Sheet <span class="export-count" data-count-for="google-sheet"></span>`;
+  exportDropdown.appendChild(googleOpt);
+
+  // 依 localStorage 專案產生
+  projects.forEach(proj => {
+    // Filter
+    const filterOpt = document.createElement('div');
+    filterOpt.className = 'filter-option';
+    filterOpt.setAttribute('data-value', proj);
+    filterOpt.innerHTML = `<input type="radio" name="projectFilter" value="${proj}"> ${proj} <span class="count-span"></span>`;
+    filterMenu.appendChild(filterOpt);
+
+    // Export
+    const exportOpt = document.createElement('div');
+    exportOpt.className = 'dropdown-item';
+    exportOpt.setAttribute('data-action', proj);
+    exportOpt.innerHTML = `proj ${proj} <span class="export-count" data-count-for="${proj}"></span>`;
+    exportDropdown.appendChild(exportOpt);
+  });
+}
+
+function findDuplicateKeyNamesDetail(data) {
+  const count = {};
+  data.forEach(row => {
+    const key = (row.projectName || "") + "||" + (row.keyName || "");
+    if (!count[key]) count[key] = 0;
+    count[key]++;
+  });
+  return Object.entries(count)
+    .filter(([k, v]) => v > 1)
+    .map(([k, v]) => {
+      const [project, keyName] = k.split("||");
+      return [project, keyName, v];
+    });
+}
+
+function getFilteredData() {
+  let filtered = currentData.filter(row => {
+    const projectMatch = (filterProject === "All" || row.projectName === filterProject);
+    const searchMatch = (!searchKey || (row.keyName && row.keyName.toLowerCase().includes(searchKey.toLowerCase())));
+    return projectMatch && searchMatch;
+  });
+  if (showDupKeys.length > 0) {
+    const dupSet = new Set(showDupKeys);
+    filtered = filtered.filter(row => dupSet.has((row.projectName || "") + "||" + (row.keyName || "")));
+  }
+  return filtered;
+}
+
+function renderTable(data, editingIdx = null) {
+  updateExportBtnAndDupWarning(currentData);
+  const tbody = document.querySelector("#lokaliseTable tbody");
+  tbody.innerHTML = "";
+  if (Array.isArray(data) && data.length > 0) {
+    const dupSet = new Set(findDuplicateKeyNamesDetail(currentData).map(([k]) => k));
+    data.forEach((row, idx) => {
+      const tr = document.createElement("tr");
+      if (dupSet.has(row.projectName + "||" + row.keyName)) {
+        tr.className = "row-duplicate";
+      }
+      if (editingIdx === idx) {
+        // 動態產生專案選單
+        const projects = getProjectList();
+        tr.innerHTML = `
+          <td>
+            <select class="select-inline" id="edit-project">
+              ${projects.map(p => `<option value="${p}"${row.projectName === p ? " selected" : ""}>${p}</option>`).join("")}
+            </select>
+          </td>
+          <td>
+            <input class="input-inline" id="edit-key" value="${row.keyName || ""}" autocomplete="off">
+            <div class="error-msg" id="edit-key-err" style="display:none"></div>
+          </td>
+          <td>
+            <span style="color:#222;">${row.content || ""}</span>
+          </td>
+          <td>
+            <div class="action-btn-group">
+              <button class="action-btn save-btn" id="save-btn">Save</button>
+            </div>
+          </td>
+        `;
+      } else {
+        tr.innerHTML = `
+          <td>${row.projectName || ""}</td>
+          <td>${row.keyName || ""}</td>
+          <td>${row.content || ""}</td>
+          <td>
+            <div class="action-btn-group">
+              <button class="action-btn edit-btn" data-index="${idx}">Edit</button>
+              <button class="action-btn locate-btn" data-index="${idx}">Locate</button>
+              <button class="action-btn delete-btn" data-index="${idx}">Delete</button>
+            </div>
+          </td>
+        `;
+      }
+      tbody.appendChild(tr);
+    });
+  } else {
+    const tr = document.createElement("tr");
+    tr.innerHTML = `<td colspan="4" style="color:#888;">No data found.</td>`;
+    tbody.appendChild(tr);
+  }
+
+  // 綁定 edit/locate/delete
+  if (editingIdx === null) {
+    document.querySelectorAll('.edit-btn').forEach(btn => {
+      btn.addEventListener('click', function() {
+        const idx = parseInt(this.getAttribute('data-index'));
+        parent.postMessage({
+          pluginMessage: {
+            type: "locate-row",
+            uuid: data[idx].uuid
+          }
+        }, "*");
+        editingIndex = idx;
+        renderTable(getFilteredData(), editingIndex);
+      });
+    });
+    document.querySelectorAll('.locate-btn').forEach(btn => {
+      btn.addEventListener('click', function() {
+        const idx = parseInt(this.getAttribute('data-index'));
+        parent.postMessage({
+          pluginMessage: {
+            type: "locate-row",
+            uuid: data[idx].uuid
+          }
+        }, "*");
+      });
+    });
+    document.querySelectorAll('.delete-btn').forEach(btn => {
+      btn.addEventListener('click', function() {
+        const idx = parseInt(this.getAttribute('data-index'));
+        if (confirm('Are you sure you want to delete this row?')) {
+          parent.postMessage({
+            pluginMessage: {
+              type: "delete-row",
+              uuid: data[idx].uuid
+            }
+          }, "*");
+        }
+      });
+    });
+  } else {
+    // 編輯狀態下，綁定儲存
+    const saveBtn = document.getElementById('save-btn');
+    const keyInput = document.getElementById('edit-key');
+    const projectSelect = document.getElementById('edit-project');
+    const keyErr = document.getElementById('edit-key-err');
+
+    function validateEdit() {
+      let valid = true;
+      let keyVal = keyInput.value.toLowerCase().replace(/[^a-z0-9\-\_\.]/g, '');
+      keyInput.value = keyVal;
+      if (!keyVal) {
+        keyErr.textContent = "key 不得為空";
+        keyErr.style.display = "block";
+        valid = false;
+      } else if (!/^[a-z0-9\-\_\.]+$/.test(keyVal)) {
+        keyErr.textContent = "只允許小寫英文、數字、-、_、.";
+        keyErr.style.display = "block";
+        valid = false;
+      } else {
+        keyErr.style.display = "none";
+      }
+      saveBtn.disabled = !valid;
+      return valid;
+    }
+
+    keyInput.addEventListener('input', validateEdit);
+
+    saveBtn.onclick = function() {
+      if (!validateEdit()) return;
+      const newProject = projectSelect.value;
+      const newKey = keyInput.value;
+      parent.postMessage({
+        pluginMessage: {
+          type: "update-row",
+          uuid: data[editingIdx].uuid,
+          projectName: newProject,
+          keyName: newKey
+        }
+      }, "*");
+    };
+
+    validateEdit();
+  }
+}
+
+function updateExportBtnAndDupWarning(data) {
+  const exportBtn = document.getElementById("exportBtn");
+  const dupWarningsContainer = document.getElementById("dupWarningsContainer");
+  updateFilterCounts();
+
+  // 詳列所有重複 key（以 project+keyName 為單位）
+  const dupList = findDuplicateKeyNamesDetail(data);
+  dupWarningsContainer.innerHTML = "";
+  if (dupList.length > 0) {
+    exportBtn.disabled = true;
+    dupList.forEach(([project, key, count]) => {
+      const keyId = project + "||" + key;
+      const warnDiv = document.createElement("div");
+      warnDiv.className = "dup-warning-list";
+      warnDiv.style.display = "flex";
+      warnDiv.style.alignItems = "center";
+      warnDiv.style.justifyContent = "space-between";
+      warnDiv.style.marginTop = "6px";
+      warnDiv.style.marginBottom = "0";
+      warnDiv.style.background = "rgba(255,0,0,0.05)";
+      warnDiv.style.padding = "16px";
+      warnDiv.style.borderRadius = "4px";
+      warnDiv.innerHTML = `<span>${project} - ${key} 有重複 ${count} 筆資料</span><button class="dupCheckBtn" data-key="${keyId}" style="font-size:14px; padding:4px 12px; border-radius:4px; border:none; background:#ffffff; color:#333; cursor:pointer; margin-left:12px;">${showDupKeys.length === 1 && showDupKeys[0] === keyId ? "show all" : "check"}</button>`;
+      dupWarningsContainer.appendChild(warnDiv);
+    });
+    dupWarningsContainer.querySelectorAll('.dupCheckBtn').forEach(btn => {
+      btn.onclick = function() {
+        const keyId = this.getAttribute('data-key');
+        if (showDupKeys.length === 1 && showDupKeys[0] === keyId) {
+          showDupKeys = [];
+        } else {
+          showDupKeys = [keyId];
+        }
+        renderTable(getFilteredData(), null);
+      };
+    });
+  } else {
+    exportBtn.disabled = !(Array.isArray(currentData) && currentData.length > 0);
+  }
+}
+
+function updateFilterCounts() {
+  const projects = getProjectList();
+  const allCount = currentData.length;
+  document.querySelector('.filter-option[data-value="All"] .count-span').textContent = `(${allCount})`;
+  projects.forEach(proj => {
+    const count = currentData.filter(row => row.projectName === proj).length;
+    const el = document.querySelector(`.filter-option[data-value="${proj}"] .count-span`);
+    if (el) el.textContent = `(${count})`;
+  });
+  // 更新 filterBtn 上的數字
+  let showCount = allCount;
+  if (filterProject !== "All") showCount = currentData.filter(row => row.projectName === filterProject).length;
+  document.getElementById('filterCountSpan').textContent = `(${showCount})`;
+}
+
+function updateExportDropdownState() {
+  const projects = getProjectList();
+  const countMap = {};
+  projects.forEach(proj => countMap[proj] = 0);
+  currentData.forEach(row => {
+    if (countMap.hasOwnProperty(row.projectName)) {
+      countMap[row.projectName]++;
+    }
+  });
+  // Google Sheet
+  document.querySelector('.export-count[data-count-for="google-sheet"]').textContent = `(${currentData.length})`;
+  projects.forEach(proj => {
+    const item = document.querySelector(`.dropdown-item[data-action="${proj}"]`);
+    const countSpan = document.querySelector(`.export-count[data-count-for="${proj}"]`);
+    if (countSpan) countSpan.textContent = `(${countMap[proj]})`;
+    if (item) {
+      if (countMap[proj] === 0) {
+        item.classList.add("disabled");
+        item.setAttribute("tabindex", "-1");
+      } else {
+        item.classList.remove("disabled");
+        item.setAttribute("tabindex", "0");
+      }
+    }
+  });
+  // 若完全無資料，exportBtn 也 disabled
+  const exportBtn = document.getElementById("exportBtn");
+  if (currentData.length === 0) {
+    exportBtn.disabled = true;
+  }
+}
+
+// 匯出 CSV
+function exportCSVNoHeader(rows, filename) {
+  const csv = rows.join("\n");
+  const blob = new Blob([csv], { type: "text/csv" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  setTimeout(() => {
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }, 0);
+}
+
+function handleExportAction(action) {
+  let rows = [];
+  let filename = "";
+  const today = (new Date()).toISOString().slice(0,10).replace(/-/g, '');
+  if (action === "google-sheet") {
+    rows = currentData.map(row =>
+      [row.projectName, row.keyName, row.content].map(escapeCSV).join(",")
+    );
+    filename = `proj-google-sheet-${today}.csv`;
+  } else {
+    const proj = action;
+    let projRows = currentData.filter(row => row.projectName === proj);
+    rows = projRows.map(row =>
+      [row.keyName, row.content].map(escapeCSV).join(",")
+    );
+    filename = `proj-${proj}-${today}.csv`;
+  }
+  exportCSVNoHeader(rows, filename);
+}
+
+function escapeCSV(val) {
+  if (typeof val !== "string") return "";
+  if (val.includes(",") || val.includes('"') || val.includes("\n")) {
+    return `"${val.replace(/"/g, '""')}"`;
+  }
+  return val;
+}
+
+// 搜尋 key
+document.getElementById('searchKey').addEventListener('input', function(e) {
+  searchKey = this.value;
+  editingIndex = null;
+  showDupKeys = [];
+  renderTable(getFilteredData(), null);
+});
+
+// Filter dropdown
+const filterBtn = document.getElementById('filterBtn');
+const filterMenu = document.getElementById('filterMenu');
+filterBtn.onclick = function(e) {
+  filterMenu.style.display = filterMenu.style.display === "block" ? "none" : "block";
+  e.stopPropagation();
+};
+document.addEventListener('click', function(e) {
+  filterMenu.style.display = "none";
+});
+function bindFilterMenuEvents() {
+  filterMenu.querySelectorAll('.filter-option').forEach(opt => {
+    opt.addEventListener('click', function(e) {
+      const val = this.getAttribute('data-value');
+      filterProject = val;
+      filterBtn.innerHTML = (val === "All" ? "projects: All" : `project: ${val}`) + ` <span id="filterCountSpan"></span> ▼`;
+      filterMenu.querySelectorAll('input[type="radio"]').forEach(radio => {
+        radio.checked = (radio.value === val);
+      });
+      filterMenu.style.display = "none";
+      editingIndex = null;
+      showDupKeys = [];
+      renderTable(getFilteredData(), null);
+      updateExportDropdownState();
+      e.stopPropagation();
+    });
+  });
+}
+
+// Export dropdown
+const exportBtn = document.getElementById("exportBtn");
+const exportDropdown = document.getElementById("exportDropdown");
+exportBtn.onclick = function(e) {
+  if (exportBtn.disabled) return;
+  exportDropdown.style.display = exportDropdown.style.display === "block" ? "none" : "block";
+  e.stopPropagation();
+};
+document.addEventListener('click', function(e) {
+  exportDropdown.style.display = "none";
+});
+function bindExportDropdownEvents() {
+  exportDropdown.querySelectorAll('.dropdown-item').forEach(opt => {
+    opt.onclick = function() {
+      if (opt.classList.contains("disabled")) return;
+      const action = this.getAttribute('data-action');
+      handleExportAction(action);
+      exportDropdown.style.display = "none";
+    };
+  });
+}
+
+// 處理 Figma 傳來的資料
+window.onmessage = (event) => {
+  const { pluginMessage } = event.data;
+  if (pluginMessage && pluginMessage.type === "lokalise-data") {
+    currentData = pluginMessage.data;
+    editingIndex = null;
+    showDupKeys = [];
+    updateAllUI();
+  }
+  if (pluginMessage && pluginMessage.type === "lokalise-data-updated") {
+    currentData = pluginMessage.data;
+    editingIndex = null;
+    showDupKeys = [];
+    updateAllUI();
+  }
+  if (pluginMessage && pluginMessage.type === "project-list") {
+    // 新增：收到 project-list
+    projectList = Array.isArray(pluginMessage.projects) ? pluginMessage.projects : [];
+    updateAllUI();
+  }
+};
+
+function updateAllUI() {
+  renderProjectFilterAndExport();
+  bindFilterMenuEvents();
+  bindExportDropdownEvents();
+  renderTable(getFilteredData(), null);
+  updateFilterCounts();
+  updateExportDropdownState();
+}
+
+// 初始化
+window.onload = () => {
+  renderProjectFilterAndExport();
+  bindFilterMenuEvents();
+  bindExportDropdownEvents();
+  renderTable([], null);
+  updateFilterCounts();
+  updateExportDropdownState();
+  parent.postMessage({ pluginMessage: { type: 'get-lokalise-list' } }, '*');
+  parent.postMessage({ pluginMessage: { type: 'get-projects' } }, '*'); // 新增：請求專案列表
+};
+  </script>
+</body>
+</html>

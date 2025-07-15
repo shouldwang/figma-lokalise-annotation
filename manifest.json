@@ -1,0 +1,28 @@
+{
+  "name": "Lokalise Annotation",
+  "id": "1525142925225558611",
+  "api": "1.0.0",
+  "main": "code.js",
+  "menu": [
+    { "name": "✍️ Annotate lokalise key", "command": "annotate-lokalise" },
+    { "name": "📋 Get lokalise key annotations", "command": "get-lokalise-list" },
+    { "name": "🔄 Re-align lokalise key annotations", "command": "realign" },
+    { "name": "⚙️ Lokalise Project Setting", "command": "project-setting" }
+  ],
+  "capabilities": [],
+  "enableProposedApi": false,
+  "documentAccess": "dynamic-page",
+  "editorType": [
+    "figma"
+  ],
+  "ui": {
+    "main": "annotate-ui.html",
+    "secondary": "get-list.html",
+    "projectSetting": "project-settings.html"
+  },
+  "networkAccess": {
+    "allowedDomains": [
+      "none"
+    ]
+  }
+}
