@@ -115,7 +115,13 @@ function getOutermostFrame(node: SceneNode): FrameNode | null {
         top: y - topBound,
         bottom: bottomBound - (y + h)
       };
-      const dir = (Object.entries(gaps).sort((a, b) => a[1] - b[1])[0][0]) as string;
+      const direction = group.getPluginData("direction") || "auto";
+      let dir: string;
+      if (direction === "auto") {
+        dir = (Object.entries(gaps).sort((a, b) => a[1] - b[1])[0][0]) as string;
+      } else {
+        dir = direction;
+      }
       const positions: any = {
         right: { x: x + w, y: y + h / 2 - frame.height / 2 },
         left: { x: x - frame.width, y: y + h / 2 - frame.height / 2 },
@@ -180,7 +186,14 @@ function getOutermostFrame(node: SceneNode): FrameNode | null {
         group.remove(); removedCount++; continue;
       }
       const gaps = calcGaps(textNode);
-      const dir = (Object.entries(gaps).sort((a,b)=>a[1]-b[1])[0][0]) as string;
+      // 這裡修正：優先用 group 的 direction
+      const direction = group.getPluginData("direction") || "auto";
+      let dir: string;
+      if (direction === "auto") {
+        dir = (Object.entries(gaps).sort((a,b)=>a[1]-b[1])[0][0]) as string;
+      } else {
+        dir = direction;
+      }
       const frame = group.findOne(n => n.type === "FRAME" && n.name === "text-naming-card") as FrameNode;
       const t = textNode.absoluteTransform;
       const x = t[0][2], y = t[1][2];
@@ -313,14 +326,21 @@ function getOutermostFrame(node: SceneNode): FrameNode | null {
         const gapRight = frameRight - (x + node.width);
         const gapTop = y - (outerFrame ? outerFrame.absoluteTransform[1][2] : 0);
         const gapBottom = (outerFrame ? outerFrame.absoluteTransform[1][2] + outerFrame.height : figma.currentPage.height) - (y + node.height);
-        const gaps = [
-          { dir: "left", value: gapLeft },
-          { dir: "right", value: gapRight },
-          { dir: "top", value: gapTop },
-          { dir: "bottom", value: gapBottom }
-        ];
-        gaps.sort((a, b) => a.value - b.value);
-        const minDir = gaps[0].dir as string;
+        // 取得 direction，預設 "auto"，UI 可傳入 msg.direction
+        const direction = msg.direction || "auto";
+        let minDir: string;
+        if (direction === "auto") {
+          const gaps = [
+            { dir: "left", value: gapLeft },
+            { dir: "right", value: gapRight },
+            { dir: "top", value: gapTop },
+            { dir: "bottom", value: gapBottom }
+          ];
+          gaps.sort((a, b) => a.value - b.value);
+          minDir = gaps[0].dir as string;
+        } else {
+          minDir = direction;
+        }
 
         const circle = figma.createEllipse();
         circle.resize(6, 6);
@@ -408,6 +428,7 @@ function getOutermostFrame(node: SceneNode): FrameNode | null {
         wrapper.locked = true;
         wrapper.setPluginData("targetId", node.id);
         wrapper.setPluginData("uuid", uuid);
+        wrapper.setPluginData("direction", direction); // <--- 新增這行，記錄方向
 
         // --- Find or create "📝 Annotations" main group ---
         let mainGroup = await getMainGroup();
