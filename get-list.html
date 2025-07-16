@@ -24,10 +24,8 @@
     }
     .info-bar {
       display: flex;
-      align-items: center;
       justify-content: space-between;
-      margin-bottom: 12px;
-      min-height: 36px;
+      margin-bottom: 8px;
       flex-direction: column;
       align-items: stretch;
     }
@@ -43,13 +41,19 @@
       font-size: 15px;
       color: #333;
     }
-    .info-bar .dup-warning {
+    .info-bar .dup-warning-list {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
       color: #ff3333;
       font-size: 14px;
       font-weight: 600;
-      margin-top: 6px;
-      margin-bottom: 0;
+      margin: 8px 0 0 0;
       white-space: pre-line;
+      background: rgba(255,0,0,0.05);
+      padding: 8px;
+      border-radius: 4px;
+    }
     }
     .filter-dropdown {
       position: relative;
@@ -62,9 +66,9 @@
       margin-left: auto; /* 讓 exportBtn 貼齊最右 */
     }
     .filter-btn, #exportBtn, .search-input {
-      font-size: 14px;
+      font-size: 12px;
       font-weight: 600;
-      height: 40px;
+      height: 32px;
       border-radius: 4px;
       border: 1px solid #1d4ed8;
       box-sizing: border-box;
@@ -91,8 +95,7 @@
     .filter-menu {
       display: none;
       position: absolute;
-      right: 0;
-      top: 110%;
+      top: 40px;
       background: #fff;
       border: 1px solid #eee;
       border-radius: 4px;
@@ -104,7 +107,7 @@
       padding: 4px 0;
     }
     .filter-option {
-      padding: 8px 20px;
+      padding: 12px 20px;
       cursor: pointer;
       font-size: 15px;
       color: #222;
@@ -116,7 +119,7 @@
       background: #f5f8ff;
     }
     .filter-option input[type="radio"] {
-      margin-right: 6px;
+      margin-right: 12px;
     }
     .filter-option .count-span {
       color: #888;
@@ -127,7 +130,7 @@
       padding: 0 12px;
       border: 1px solid #ccc;
       background: #fff;
-      color: #222;
+      color: #333;
       min-width: 160px;
       margin-right: 0;
       outline: none;
@@ -140,7 +143,7 @@
       display: none;
       position: absolute;
       right: 0;
-      top: 110%;
+      top: 36px;
       background: #fff;
       border: 1px solid #eee;
       border-radius: 4px;
@@ -194,7 +197,7 @@
       font-size: 15px;
     }
     th, td {
-      padding: 16px 16px;
+      padding: 8px 16px;
       border-bottom: 1px solid #dedede;
       text-align: left;
       line-height: 1.5;
@@ -202,14 +205,14 @@
     th {
       background: #f5f5f5;
       font-size: 14px;
-      font-weight: 600;
+      font-weight: 500;
       color: #666;
       position: sticky;
       top: 0;
     }
     td {
       font-size: 14px;
-      font-weight: 600;
+      font-weight: 400;
       color: #333;
     }
     .row-duplicate {
@@ -233,21 +236,11 @@
       margin-top: 2px;
       margin-bottom: 0;
     }
-    th:nth-child(1), td:nth-child(1) { width: 15%; }
-    th:nth-child(2), td:nth-child(2) { width: 20%; }
-    th:nth-child(3), td:nth-child(3) { width: 40%; }
-    th:nth-child(4), td:nth-child(4) { width: 25%; }
-    .dup-warning-list {
-      color: #ff3333;
-      font-size: 14px;
-      font-weight: 600;
-      margin-top: 6px;
-      margin-bottom: 0;
-      white-space: pre-line;
-      background: rgba(255,0,0,0.05);
-      padding: 8px;
-      border-radius: 4px;
-    }
+    th:nth-child(1), td:nth-child(1) { width: 20%; }
+    th:nth-child(2), td:nth-child(2) { width: 30%; }
+    th:nth-child(3), td:nth-child(3) { width: 30%; }
+    th:nth-child(4), td:nth-child(4) { width: 20%; }
+    
     .action-btn-group {
       display: flex;
       flex-direction: row;
@@ -256,8 +249,7 @@
 
     .action-btn {
       height: 32px;
-      min-width: 64px;
-      padding: 0 16px;
+      padding: 0 8px;
       border-radius: 4px;
       font-size: 12px;
       font-weight: 600;
@@ -317,9 +309,9 @@
       <table id="lokaliseTable">
         <thead>
           <tr>
-            <th>project</th>
-            <th>key</th>
-            <th>EN String</th>
+            <th>Project</th>
+            <th>Key</th>
+            <th>Draft String</th>
             <th>Actions</th>
           </tr>
         </thead>
@@ -564,18 +556,10 @@ function updateExportBtnAndDupWarning(data) {
       const keyId = project + "||" + key;
       const warnDiv = document.createElement("div");
       warnDiv.className = "dup-warning-list";
-      warnDiv.style.display = "flex";
-      warnDiv.style.alignItems = "center";
-      warnDiv.style.justifyContent = "space-between";
-      warnDiv.style.marginTop = "6px";
-      warnDiv.style.marginBottom = "0";
-      warnDiv.style.background = "rgba(255,0,0,0.05)";
-      warnDiv.style.padding = "16px";
-      warnDiv.style.borderRadius = "4px";
-      warnDiv.innerHTML = `<span>${project} - ${key} 有重複 ${count} 筆資料</span><button class="dupCheckBtn" data-key="${keyId}" style="font-size:14px; padding:4px 12px; border-radius:4px; border:none; background:#ffffff; color:#333; cursor:pointer; margin-left:12px;">${showDupKeys.length === 1 && showDupKeys[0] === keyId ? "show all" : "check"}</button>`;
+      warnDiv.innerHTML = `<span>${project} - ${key} 有重複 ${count} 筆資料</span><button class="action-btn dupCheck-btn" data-key="${keyId}" style="font-size:14px; padding:4px 12px; border-radius:4px; border:none; background:#ffffff; color:#333; cursor:pointer; margin-left:12px;">${showDupKeys.length === 1 && showDupKeys[0] === keyId ? "show all" : "check"}</button>`;
       dupWarningsContainer.appendChild(warnDiv);
     });
-    dupWarningsContainer.querySelectorAll('.dupCheckBtn').forEach(btn => {
+    dupWarningsContainer.querySelectorAll('.dupCheck-btn').forEach(btn => {
       btn.onclick = function() {
         const keyId = this.getAttribute('data-key');
         if (showDupKeys.length === 1 && showDupKeys[0] === keyId) {
@@ -705,7 +689,7 @@ function bindFilterMenuEvents() {
     opt.addEventListener('click', function(e) {
       const val = this.getAttribute('data-value');
       filterProject = val;
-      filterBtn.innerHTML = (val === "All" ? "projects: All" : `project: ${val}`) + ` <span id="filterCountSpan"></span> ▼`;
+      filterBtn.innerHTML = (val === "All" ? "projects: All" : `project: ${val}`) + `<span id="filterCountSpan"></span> ▼`;
       filterMenu.querySelectorAll('input[type="radio"]').forEach(radio => {
         radio.checked = (radio.value === val);
       });
