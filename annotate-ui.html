@@ -8,7 +8,7 @@
   h4 {
     margin: 0 0 8px 0;
     font-weight: 600;
-    font-size: 16px;
+    font-size: 14px;
     font-family: inherit;
   }
   .row {
@@ -34,7 +34,7 @@
     flex: 1 1 calc(50% - 8px);
     box-sizing: border-box;
     padding: 4px 8px;
-    height: 48px;
+    height: 40px;
     border: 1px solid #E6E6E6;
     border-radius: 4px;
     font-size: 16px;
@@ -80,30 +80,32 @@
     margin-bottom: 0;
     user-select: none;
   }
-  #create {
-    bottom: 16px;
-    width: 100%;
-    margin: 0 0 16px 0;
-    padding: 10px 0;
+
+  
+  .footer-btn-container {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 100;
+    background: #fff;
+    padding: 16px 0;
+    border-top: 1px solid #e6e6e6;
+  }
+  .footer-btn {
+    display: block;
+    margin: 0 auto;
+    width: calc(100% - 32px);
+    max-width: 480px;
     font-size: 16px;
+    font-weight: 600;
     font-family: inherit;
     background: #1D4ED8;
     color: #fff;
     border: none;
     border-radius: 4px;
-    font-weight: 600;
+    height: 40px;
     cursor: pointer;
-  }
-  .footer-btn {
-    position: fixed;
-    left: 16px;
-    right: 16px;
-    bottom: 16px;
-    max-width: calc(100vw - 32px);
-    width: 100%;
-    margin: 0;
-    z-index: 10;
-    box-sizing: border-box;
   }
   #create:disabled {
     background: #b3c7e6;
@@ -117,27 +119,34 @@
   }
   #preview {
     background: #fafafa;
+    border: 1px solid #e6e6e6;
     border-radius: 4px;
-    min-height: 80px;
-    padding: 12px;
+    min-height: 40px;
+    max-height: 160px;
+    padding: 8px;
     margin-bottom: 16px;
     font-size: 15px;
     color: #333;
-    word-break: break-all;
+    position: relative;
+    overflow: hidden;
   }
   #preview h5 {
+    position: absolute;
     margin: 0 0 8px 0;
     font-size: 14px;
-    font-weight: 600;
-    color: #888;
+    font-weight: 500;
+    color: #999;
     font-family: inherit;
   }
   #previewContent {
-    font-size: 17.6px;
+    font-size: 16px;
     line-height: 1.5;
     display: block;
-    margin-top: 0;
+    margin-top: 24px;
     margin-bottom: 0;
+    max-height: 120px;
+    word-break: break-word;
+    overflow-y: auto;
   }
   .project-empty-tip {
     color: #e00;
@@ -147,7 +156,7 @@
     font-weight: 500;
   }
   body {
-    padding-bottom: 72px;
+    padding-bottom: 72px; /* 預留空間，footer-btn-container高度約72px */
   }
 </style>
 <div id="preview">
@@ -192,7 +201,10 @@
     </label>
   </div>
 </div>
-<button id="create" class="footer-btn" disabled>Create</button>
+<!-- 把原本的 button 換到 container -->
+<div class="footer-btn-container">
+  <button id="create" class="footer-btn" disabled>Create</button>
+</div>
 <script>
 let projectList = [];
 
