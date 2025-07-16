@@ -310,7 +310,7 @@ function getOutermostFrame(node) {
                 labelFrame.primaryAxisSizingMode = "AUTO";
                 labelFrame.counterAxisSizingMode = "AUTO";
                 labelFrame.paddingLeft = labelFrame.paddingRight = 8;
-                labelFrame.paddingTop = labelFrame.paddingBottom = 8;
+                labelFrame.paddingTop = labelFrame.paddingBottom = 6;
                 labelFrame.cornerRadius = 2;
                 labelFrame.fills = [{ type: "SOLID", color: { r: 1, g: 1, b: 1 } }];
                 labelFrame.strokes = [{ type: "SOLID", color: { r: 0.114, g: 0.306, b: 0.847 } }];
