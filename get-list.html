@@ -195,6 +195,7 @@
       border-collapse: collapse;
       background: #fff;
       font-size: 15px;
+      table-layout: fixed;
     }
     th, td {
       padding: 8px 16px;
@@ -211,10 +212,16 @@
       top: 0;
     }
     td {
+      height: 49px;
       font-size: 14px;
       font-weight: 400;
       color: #333;
     }
+
+    td:nth-child(2) {
+      overflow-wrap: anywhere; 
+    }
+
     .row-duplicate {
       background: rgba(255,0,0,0.10);
     }
@@ -223,8 +230,8 @@
       padding: 4px 8px;
       border: 1px solid #ccc;
       border-radius: 4px;
-      width: 100%;
       box-sizing: border-box;
+      width: 100%;
     }
     .input-inline:focus, .select-inline:focus {
       outline: none;
@@ -282,6 +289,12 @@
       background: #fff;
       color: #e00;
       border: 1.5px solid #e00;
+    }
+    .disabled-text {
+      color: #b3b3b3 !important;
+    }
+    .action-btn-group.hidden {
+      display: none !important;
     }
   </style>
 </head>
@@ -414,7 +427,7 @@ function renderTable(data, editingIdx = null) {
         tr.className = "row-duplicate";
       }
       if (editingIdx === idx) {
-        // 動態產生專案選單
+        // 編輯中的 row
         const projects = getProjectList();
         tr.innerHTML = `
           <td>
@@ -436,12 +449,15 @@ function renderTable(data, editingIdx = null) {
           </td>
         `;
       } else {
+        // 其他 row
+        const disabledClass = editingIdx !== null ? 'disabled-text' : '';
+        const actionBtnGroupClass = editingIdx !== null ? 'action-btn-group hidden' : 'action-btn-group';
         tr.innerHTML = `
-          <td>${row.projectName || ""}</td>
-          <td>${row.keyName || ""}</td>
-          <td>${row.content || ""}</td>
+          <td class="${disabledClass}">${row.projectName || ""}</td>
+          <td class="${disabledClass}">${row.keyName || ""}</td>
+          <td class="${disabledClass}">${row.content || ""}</td>
           <td>
-            <div class="action-btn-group">
+            <div class="${actionBtnGroupClass}">
               <button class="action-btn edit-btn" data-index="${idx}">Edit</button>
               <button class="action-btn locate-btn" data-index="${idx}">Locate</button>
               <button class="action-btn delete-btn" data-index="${idx}">Delete</button>
