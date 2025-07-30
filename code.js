@@ -147,14 +147,23 @@ function getOutermostFrame(node) {
         };
         (() => __awaiter(void 0, void 0, void 0, function* () {
             const groups = yield findLokaliseGroups();
-            const data = groups.map(group => {
-                var _a;
-                const uuid = ((_a = group.name.match(/-(\d+)$/)) === null || _a === void 0 ? void 0 : _a[1]) || "";
+            // 這裡改成 async 取得最新 text node 內容
+            const data = yield Promise.all(groups.map((group) => __awaiter(void 0, void 0, void 0, function* () {
+                var _b;
+                const uuid = ((_b = group.name.match(/-(\d+)$/)) === null || _b === void 0 ? void 0 : _b[1]) || "";
                 const projectName = group.findOne(n => n.type === "TEXT" && n.name === "projectName").characters;
                 const keyName = group.findOne(n => n.type === "TEXT" && n.name === "keyName").characters;
-                const content = group.findOne(n => n.type === "TEXT" && n.name === "content").characters;
+                // 取得最新的 text node 內容
+                const targetId = group.getPluginData('targetId');
+                let content = "";
+                if (targetId) {
+                    const textNode = yield figma.getNodeByIdAsync(targetId);
+                    if (textNode && textNode.type === "TEXT") {
+                        content = textNode.characters;
+                    }
+                }
                 return { uuid, projectName, keyName, content };
-            });
+            })));
             console.log("[get-lokalise-list] Send lokalise-data", data);
             figma.ui.postMessage({ type: "lokalise-data", data });
             // Also send project list to get-list UI
@@ -482,14 +491,22 @@ function getOutermostFrame(node) {
                         yield realignGroup(group);
                 }
                 const groups = yield findLokaliseGroups();
-                const data = groups.map(group => {
-                    var _a;
-                    const uuid = ((_a = group.name.match(/-(\d+)$/)) === null || _a === void 0 ? void 0 : _a[1]) || "";
+                const data = yield Promise.all(groups.map((group) => __awaiter(void 0, void 0, void 0, function* () {
+                    var _c;
+                    const uuid = ((_c = group.name.match(/-(\d+)$/)) === null || _c === void 0 ? void 0 : _c[1]) || "";
                     const projectName = group.findOne(n => n.type === "TEXT" && n.name === "projectName").characters;
                     const keyName = group.findOne(n => n.type === "TEXT" && n.name === "keyName").characters;
-                    const content = group.findOne(n => n.type === "TEXT" && n.name === "content").characters;
+                    // 取得最新的 text node 內容
+                    const targetId = group.getPluginData('targetId');
+                    let content = "";
+                    if (targetId) {
+                        const textNode = yield figma.getNodeByIdAsync(targetId);
+                        if (textNode && textNode.type === "TEXT") {
+                            content = textNode.characters;
+                        }
+                    }
                     return { uuid, projectName, keyName, content };
-                });
+                })));
                 figma.ui.postMessage({ type: "lokalise-data-updated", data });
                 console.log("[get-lokalise-list] Updated row", msg.uuid, msg.projectName, msg.keyName);
             }
@@ -512,14 +529,22 @@ function getOutermostFrame(node) {
                 if (group)
                     group.remove();
                 const groups = yield findLokaliseGroups();
-                const data = groups.map(group => {
-                    var _a;
-                    const uuid = ((_a = group.name.match(/-(\d+)$/)) === null || _a === void 0 ? void 0 : _a[1]) || "";
+                const data = yield Promise.all(groups.map((group) => __awaiter(void 0, void 0, void 0, function* () {
+                    var _d;
+                    const uuid = ((_d = group.name.match(/-(\d+)$/)) === null || _d === void 0 ? void 0 : _d[1]) || "";
                     const projectName = group.findOne(n => n.type === "TEXT" && n.name === "projectName").characters;
                     const keyName = group.findOne(n => n.type === "TEXT" && n.name === "keyName").characters;
-                    const content = group.findOne(n => n.type === "TEXT" && n.name === "content").characters;
+                    // 取得最新的 text node 內容
+                    const targetId = group.getPluginData('targetId');
+                    let content = "";
+                    if (targetId) {
+                        const textNode = yield figma.getNodeByIdAsync(targetId);
+                        if (textNode && textNode.type === "TEXT") {
+                            content = textNode.characters;
+                        }
+                    }
                     return { uuid, projectName, keyName, content };
-                });
+                })));
                 figma.ui.postMessage({ type: "lokalise-data-updated", data });
                 console.log("[get-lokalise-list] Deleted row", msg.uuid);
             }

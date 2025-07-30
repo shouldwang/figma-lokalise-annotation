@@ -135,13 +135,22 @@ function getOutermostFrame(node: SceneNode): FrameNode | null {
 
     (async () => {
       const groups = await findLokaliseGroups!();
-      const data = groups.map(group => {
+      // 這裡改成 async 取得最新 text node 內容
+      const data = await Promise.all(groups.map(async group => {
         const uuid = group.name.match(/-(\d+)$/)?.[1] || "";
         const projectName = (group.findOne(n => n.type === "TEXT" && n.name === "projectName") as TextNode).characters;
         const keyName = (group.findOne(n => n.type === "TEXT" && n.name === "keyName") as TextNode).characters;
-        const content = (group.findOne(n => n.type === "TEXT" && n.name === "content") as TextNode).characters;
+        // 取得最新的 text node 內容
+        const targetId = group.getPluginData('targetId');
+        let content = "";
+        if (targetId) {
+          const textNode = await figma.getNodeByIdAsync(targetId);
+          if (textNode && textNode.type === "TEXT") {
+            content = textNode.characters;
+          }
+        }
         return { uuid, projectName, keyName, content };
-      });
+      }));
       console.log("[get-lokalise-list] Send lokalise-data", data);
       figma.ui.postMessage({ type: "lokalise-data", data });
 
@@ -472,13 +481,21 @@ function getOutermostFrame(node: SceneNode): FrameNode | null {
           if (realignGroup) await realignGroup(group);
         }
         const groups = await findLokaliseGroups();
-        const data = groups.map(group => {
+        const data = await Promise.all(groups.map(async group => {
           const uuid = group.name.match(/-(\d+)$/)?.[1] || "";
           const projectName = (group.findOne(n => n.type === "TEXT" && n.name === "projectName") as TextNode).characters;
           const keyName = (group.findOne(n => n.type === "TEXT" && n.name === "keyName") as TextNode).characters;
-          const content = (group.findOne(n => n.type === "TEXT" && n.name === "content") as TextNode).characters;
+          // 取得最新的 text node 內容
+          const targetId = group.getPluginData('targetId');
+          let content = "";
+          if (targetId) {
+            const textNode = await figma.getNodeByIdAsync(targetId);
+            if (textNode && textNode.type === "TEXT") {
+              content = textNode.characters;
+            }
+          }
           return { uuid, projectName, keyName, content };
-        });
+        }));
         figma.ui.postMessage({ type: "lokalise-data-updated", data });
         console.log("[get-lokalise-list] Updated row", msg.uuid, msg.projectName, msg.keyName);
       }
@@ -498,13 +515,21 @@ function getOutermostFrame(node: SceneNode): FrameNode | null {
         const group = mainGroup.children.find(g => g.name.endsWith(`-${msg.uuid}`)) as GroupNode;
         if (group) group.remove();
         const groups = await findLokaliseGroups();
-        const data = groups.map(group => {
+        const data = await Promise.all(groups.map(async group => {
           const uuid = group.name.match(/-(\d+)$/)?.[1] || "";
           const projectName = (group.findOne(n => n.type === "TEXT" && n.name === "projectName") as TextNode).characters;
           const keyName = (group.findOne(n => n.type === "TEXT" && n.name === "keyName") as TextNode).characters;
-          const content = (group.findOne(n => n.type === "TEXT" && n.name === "content") as TextNode).characters;
+          // 取得最新的 text node 內容
+          const targetId = group.getPluginData('targetId');
+          let content = "";
+          if (targetId) {
+            const textNode = await figma.getNodeByIdAsync(targetId);
+            if (textNode && textNode.type === "TEXT") {
+              content = textNode.characters;
+            }
+          }
           return { uuid, projectName, keyName, content };
-        });
+        }));
         figma.ui.postMessage({ type: "lokalise-data-updated", data });
         console.log("[get-lokalise-list] Deleted row", msg.uuid);
       }
