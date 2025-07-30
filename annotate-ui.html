@@ -166,7 +166,7 @@
 <div class="row">
   <h4>Name Your Key</h4>
   <input id="customInput" class="full-width" type="text" pattern="[A-Za-z0-9\-\_\.]*" title="只能輸入小寫英文、數字、-、_、.">
-  <div class="input-desc"> You can only use lowercase letters, numbers, -, _, and . for key names.</div>
+  <div class="input-desc"> You can only use uppercase and lowercase letters, numbers, -, _, and . for key names.</div>
   <div id="errorMsg">Please enter a valid lokalise key name</div>
 </div>
 <div class="row">
@@ -278,7 +278,7 @@ const previewContent = document.getElementById('previewContent');
 
 function validateInput() {
   const value = input.value;
-  const valid = /^[a-z0-9\-\_\.]+$/.test(value);
+  const valid = /^[A-Za-z0-9\-\_\.]+$/.test(value);
   const projects = getProjectList();
   const project = getSelectedProject();
   console.log('[annotate-ui] validateInput', { value, valid, projects, project });
@@ -297,7 +297,7 @@ function validateInput() {
 }
 
 input.addEventListener('input', function(e) {
-  this.value = this.value.toLowerCase().replace(/[^a-z0-9\-\_\.]/g, '');
+  this.value = this.value.replace(/[^A-Za-z0-9\-\_\.]/g, '');
   console.log('[annotate-ui] input changed', this.value);
   validateInput();
 });
