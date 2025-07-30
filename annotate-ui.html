@@ -165,7 +165,7 @@
 </div>
 <div class="row">
   <h4>Name Your Key</h4>
-  <input id="customInput" class="full-width" type="text" pattern="[A-Za-z0-9\-\_\.]*" title="只能輸入小寫英文、數字、-、_、.">
+  <input id="customInput" class="full-width" type="text" pattern="[A-Za-z0-9\-\_\.]*" title="只能輸入大小寫英文、數字、-、_、.">
   <div class="input-desc"> You can only use uppercase and lowercase letters, numbers, -, _, and . for key names.</div>
   <div id="errorMsg">Please enter a valid lokalise key name</div>
 </div>
@@ -378,7 +378,7 @@ window.onload = () => {
 createBtn.onclick = () => {
   const project = getSelectedProject();
   const key = input.value;
-  const valid = /^[a-z0-9\-\_\.]+$/.test(key);
+  const valid = /^[A-Za-z0-9\-\_\.]+$/.test(key);
   const dir = getSelectedPosition();
   console.log('[annotate-ui] createBtn.onclick', { project, key, valid, dir });
 
