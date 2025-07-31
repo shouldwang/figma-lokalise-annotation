@@ -13,6 +13,9 @@
       display: flex;
       flex-direction: column;
     }
+    body::-webkit-scrollbar {
+      display: none;
+    }
     .sticky-bar {
       position: sticky;
       top: 0;
@@ -23,19 +26,23 @@
     .info-bar {
       display: flex;
       flex-direction: column;
-      padding: 12px;
       align-items: stretch;
     }
     .chip-group {
       display: flex;
       gap: 8px;
+      padding: 12px;
       flex-wrap: nowrap;             
       overflow-x: auto;              
       overflow-y: hidden;
       -webkit-overflow-scrolling: touch;
+      cursor: grab;
     }
     .chip-group::-webkit-scrollbar {
       display:none;
+    }
+    .chip-group.active {
+      cursor: grabbing;
     }
     .chip {
       display: inline-flex;
@@ -274,7 +281,7 @@
       border: none;
       outline: none;
       font-size: 14px;
-      width: 200px;
+      width: 100%;
       padding: 4px 0;
       background: transparent;
     }
@@ -410,6 +417,48 @@ let showDupKeys = [];
 let projectList = [];
 
 function getProjectList() { return projectList; }
+
+// --- chip group 拖拽功能 ---
+function initChipGroupDrag() {
+  const chipGroup = document.getElementById('projectChipGroup');
+  let isDown = false;
+  let startX;
+  let scrollLeft;
+
+  chipGroup.addEventListener('mousedown', (e) => {
+    isDown = true;
+    chipGroup.classList.add('active');
+    startX = e.pageX - chipGroup.offsetLeft;
+    scrollLeft = chipGroup.scrollLeft;
+    chipGroup.style.cursor = 'grabbing';
+    chipGroup.style.userSelect = 'none';
+  });
+
+  chipGroup.addEventListener('mouseleave', () => {
+    isDown = false;
+    chipGroup.classList.remove('active');
+    chipGroup.style.cursor = 'grab';
+    chipGroup.style.userSelect = 'auto';
+  });
+
+  chipGroup.addEventListener('mouseup', () => {
+    isDown = false;
+    chipGroup.classList.remove('active');
+    chipGroup.style.cursor = 'grab';
+    chipGroup.style.userSelect = 'auto';
+  });
+
+  chipGroup.addEventListener('mousemove', (e) => {
+    if (!isDown) return;
+    e.preventDefault();
+    const x = e.pageX - chipGroup.offsetLeft;
+    const walk = (x - startX) * 2; // 調整拖拽速度
+    chipGroup.scrollLeft = scrollLeft - walk;
+  });
+
+  // 設置初始樣式
+  chipGroup.style.cursor = 'grab';
+}
 
 // --- 新增 chip group 渲染 ---
 function renderProjectChipGroup() {
@@ -809,6 +858,7 @@ window.onmessage = (event) => {
 
 function updateAllUI() {
   renderProjectChipGroup();
+  initChipGroupDrag();
   renderExportDropdown();
   bindExportDropdownEvents();
   renderCardList(getFilteredData(), editingIndex);
@@ -817,6 +867,7 @@ function updateAllUI() {
 
 window.onload = () => {
   renderProjectChipGroup();
+  initChipGroupDrag();
   renderExportDropdown();
   bindExportDropdownEvents();
   renderCardList([], null);
