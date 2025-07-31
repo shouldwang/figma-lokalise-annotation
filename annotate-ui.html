@@ -379,13 +379,13 @@ window.onmessage = (event) => {
         
         validateInput();
       } else {
-        // 重置所有狀態
+        // Reset currentAnnotationInfo
         currentAnnotationInfo = null;
         
-        // 清空輸入框
+        // Empty input
         input.value = '';
         
-        // 改變按鈕文案
+        // Change button text
         createBtn.textContent = 'Create';
         
         // 重新選中第一個 project（如果有的話）
