@@ -7,20 +7,33 @@
     body {
       font-family: 'Segoe UI', 'Helvetica Neue', Arial, 'Liberation Sans', 'Nimbus Sans', 'sans-serif';
       margin: 0;
-      background: #fff;
+      background: #fafafa;
       height: 100vh;
-      /* 移除 padding */
     }
     .center {
       display: flex;
       flex-direction: column;
       justify-content: flex-start;
       height: 100vh;
-      padding: 16px;
+      padding: 12px;
       box-sizing: border-box;
     }
-    .desc { font-size: 16px; color: #666; margin-bottom: 16px; line-height: 1.5; }
+    .desc {
+      margin: 0 4px 8px 4px;
+    }
+    .desc h4 {
+      margin: 0 0 4px 0;
+      font-family: inherit;
+      font-weight: 600;
+      font-size: 14px;
+    }
+    .desc span { 
+      font-size: 14px;
+      color: #777;
+      line-height: 1.5; 
+    }
     textarea {
+      font-family: inherit;
       flex: 1 1 0;
       min-height: 0;
       width: 100%;
@@ -42,13 +55,21 @@
       margin-top: 16px;
     }
     button:disabled { background: #b3c7e6; cursor: not-allowed; }
-    .err { color: #e00; font-size: 14px; margin-bottom: 8px; display: none; }
+    .err { 
+      color: #e00;
+      font-weight: 500;
+      font-size: 14px; 
+      margin-top: 8px; 
+      display: none; }
   </style>
 </head>
 <body>
   <div class="center">
-    <div class="desc">Please enter your Lokalise project name(s). If you have multiple, separate them with a comma (,).</div>
-    <textarea id="projectInput" placeholder="please enter project name(s)"></textarea>
+    <div class="desc">
+      <h4> Enter Your Lokalise Project Name(s)</h4>
+      <span>If you have multiple, separate them with a comma (,).</span>
+    </div>
+    <textarea id="projectInput" placeholder="e.g. proj-A, proj-B, etc."></textarea>
     <div class="err" id="errMsg"></div>
     <button id="saveBtn" disabled>Save</button>
   </div>
@@ -70,7 +91,7 @@
     function validate() {
       const arr = input.value.split(',').map(s => s.trim()).filter(Boolean);
       if (arr.length === 0) {
-        err.textContent = "Please enter at least one project name.";
+        err.textContent = "Please enter at least one project.";
         err.style.display = 'block';
         btn.disabled = true;
         return false;
