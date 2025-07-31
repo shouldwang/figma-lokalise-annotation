@@ -8,7 +8,7 @@ function showUIByCommand(command: string) {
   } else if (command === "get-lokalise-list") {
     figma.showUI(__uiFiles__.secondary, { width: 960, height: 480 });
   } else if (command === "project-setting") {
-    figma.showUI(__uiFiles__.projectSetting, { width: 400, height: 400 });
+    figma.showUI(__uiFiles__.projectSetting, { width: 400, height: 280 });
   }
 }
 

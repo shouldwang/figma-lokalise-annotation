@@ -19,7 +19,7 @@ function showUIByCommand(command) {
         figma.showUI(__uiFiles__.secondary, { width: 960, height: 480 });
     }
     else if (command === "project-setting") {
-        figma.showUI(__uiFiles__.projectSetting, { width: 400, height: 400 });
+        figma.showUI(__uiFiles__.projectSetting, { width: 400, height: 280 });
     }
 }
 // Utility: find or cache the "📝 Annotations" main group on the current page
