@@ -4,11 +4,11 @@
 function showUIByCommand(command: string) {
   console.log("[showUIByCommand] command:", command);
   if (command === "annotate-lokalise") {
-    figma.showUI(__uiFiles__.main, { width: 480, height: 600 });
+    figma.showUI(__uiFiles__.main, { width: 400, height: 600 });
   } else if (command === "get-lokalise-list") {
     figma.showUI(__uiFiles__.secondary, { width: 960, height: 480 });
   } else if (command === "project-setting") {
-    figma.showUI(__uiFiles__.projectSetting, { width: 480, height: 480 });
+    figma.showUI(__uiFiles__.projectSetting, { width: 400, height: 400 });
   }
 }
 
