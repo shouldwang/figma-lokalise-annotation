@@ -73,13 +73,42 @@ function getOutermostFrame(node) {
             figma.closePlugin('Please select a single text node to annotate.');
             return;
         }
+        function isTextNodeAnnotated(textNode) {
+            var _a, _b, _c;
+            return __awaiter(this, void 0, void 0, function* () {
+                const mainGroup = yield getMainGroup();
+                if (!mainGroup)
+                    return { isAnnotated: false };
+                const annotationGroups = mainGroup.children.filter(node => node.type === "GROUP" && /^lokaliseAnnotation-\d+$/.test(node.name));
+                const existingAnnotation = annotationGroups.find(group => group.getPluginData('targetId') === textNode.id);
+                if (existingAnnotation) {
+                    const keyName = ((_a = existingAnnotation.findOne(n => n.type === "TEXT" && n.name === "keyName")) === null || _a === void 0 ? void 0 : _a.characters) || "";
+                    const projectName = ((_b = existingAnnotation.findOne(n => n.type === "TEXT" && n.name === "projectName")) === null || _b === void 0 ? void 0 : _b.characters) || "";
+                    const uuid = existingAnnotation.getPluginData('uuid') || ((_c = existingAnnotation.name.match(/-(\d+)$/)) === null || _c === void 0 ? void 0 : _c[1]) || "";
+                    return {
+                        isAnnotated: true,
+                        keyName,
+                        projectName,
+                        uuid
+                    };
+                }
+                return { isAnnotated: false };
+            });
+        }
         function sendCurrentTextContent() {
-            const sel = figma.currentPage.selection;
-            const content = sel.length === 1 && sel[0].type === "TEXT"
-                ? sel[0].characters
-                : null;
-            console.log("[annotate-lokalise] sendCurrentTextContent", content);
-            figma.ui.postMessage({ type: "content-result", content });
+            return __awaiter(this, void 0, void 0, function* () {
+                const sel = figma.currentPage.selection;
+                if (sel.length === 1 && sel[0].type === "TEXT") {
+                    const textNode = sel[0];
+                    const content = textNode.characters;
+                    const annotationInfo = yield isTextNodeAnnotated(textNode);
+                    console.log("[annotate-lokalise] sendCurrentTextContent", content, "annotationInfo:", annotationInfo);
+                    figma.ui.postMessage(Object.assign({ type: "content-result", content }, annotationInfo));
+                }
+                else {
+                    figma.ui.postMessage({ type: "content-result", content: null, isAnnotated: false });
+                }
+            });
         }
         sendCurrentTextContent();
         figma.on("selectionchange", sendCurrentTextContent);
@@ -469,6 +498,33 @@ function getOutermostFrame(node) {
             }
             if (msg.type === 'cancel') {
                 figma.closePlugin();
+            }
+            if (msg.type === "update-annotation") {
+                const { uuid, key, project } = msg;
+                const mainGroup = yield getMainGroup();
+                if (!mainGroup)
+                    return;
+                const group = mainGroup.children.find(g => g.name.endsWith(`-${uuid}`));
+                if (group) {
+                    yield figma.loadFontAsync({ family: "DM Mono", style: "Medium" });
+                    // 更新 project 和 key 的文字
+                    group.findOne(n => n.name === "projectName").characters = project;
+                    group.findOne(n => n.name === "keyName").characters = key;
+                    // 重新對齊位置（如果需要的話）
+                    const textNodeId = group.getPluginData('targetId');
+                    const textNode = textNodeId ? yield figma.getNodeByIdAsync(textNodeId) : null;
+                    if (textNode) {
+                        // 這裡可以加入重新對齊的邏輯，類似 realign 功能
+                        const direction = group.getPluginData("direction") || msg.direction || "auto";
+                        // 重新計算位置並更新
+                        // ...可以參考 realign 中的邏輯
+                    }
+                    figma.notify('Updated annotation successfully!');
+                    console.log("[update-annotation] Updated annotation for", { key, project, uuid });
+                }
+                else {
+                    figma.notify('Cannot find the annotation to update.');
+                }
             }
         }
         // --- get-lokalise-list ---

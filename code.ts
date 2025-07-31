@@ -63,13 +63,50 @@ function getOutermostFrame(node: SceneNode): FrameNode | null {
       return;
     }
 
-    function sendCurrentTextContent() {
+    async function isTextNodeAnnotated(textNode: TextNode): Promise<{isAnnotated: boolean, keyName?: string, projectName?: string, uuid?: string}> {
+      const mainGroup = await getMainGroup();
+      if (!mainGroup) return {isAnnotated: false};
+      
+      const annotationGroups = mainGroup.children.filter(
+        node => node.type === "GROUP" && /^lokaliseAnnotation-\d+$/.test(node.name)
+      ) as GroupNode[];
+      
+      const existingAnnotation = annotationGroups.find(group => 
+        group.getPluginData('targetId') === textNode.id
+      );
+      
+      if (existingAnnotation) {
+        const keyName = (existingAnnotation.findOne(n => n.type === "TEXT" && n.name === "keyName") as TextNode)?.characters || "";
+        const projectName = (existingAnnotation.findOne(n => n.type === "TEXT" && n.name === "projectName") as TextNode)?.characters || "";
+        const uuid = existingAnnotation.getPluginData('uuid') || existingAnnotation.name.match(/-(\d+)$/)?.[1] || "";
+        
+        return {
+          isAnnotated: true,
+          keyName,
+          projectName,
+          uuid
+        };
+      }
+      
+      return {isAnnotated: false};
+    }
+
+    async function sendCurrentTextContent() {
       const sel = figma.currentPage.selection;
-      const content = sel.length === 1 && sel[0].type === "TEXT"
-        ? (sel[0] as TextNode).characters
-        : null;
-      console.log("[annotate-lokalise] sendCurrentTextContent", content);
-      figma.ui.postMessage({ type: "content-result", content });
+      if (sel.length === 1 && sel[0].type === "TEXT") {
+        const textNode = sel[0] as TextNode;
+        const content = textNode.characters;
+        const annotationInfo = await isTextNodeAnnotated(textNode);
+        
+        console.log("[annotate-lokalise] sendCurrentTextContent", content, "annotationInfo:", annotationInfo);
+        figma.ui.postMessage({ 
+          type: "content-result", 
+          content, 
+          ...annotationInfo
+        });
+      } else {
+        figma.ui.postMessage({ type: "content-result", content: null, isAnnotated: false });
+      }
     }
 
     sendCurrentTextContent();
@@ -461,6 +498,35 @@ function getOutermostFrame(node: SceneNode): FrameNode | null {
       }
       if (msg.type === 'cancel') {
         figma.closePlugin();
+      }
+      if (msg.type === "update-annotation") {
+        const { uuid, key, project } = msg;
+        const mainGroup = await getMainGroup();
+        if (!mainGroup) return;
+        
+        const group = mainGroup.children.find(g => g.name.endsWith(`-${uuid}`)) as GroupNode;
+        if (group) {
+          await figma.loadFontAsync({ family: "DM Mono", style: "Medium" });
+          
+          // 更新 project 和 key 的文字
+          (group.findOne(n => n.name === "projectName") as TextNode).characters = project;
+          (group.findOne(n => n.name === "keyName") as TextNode).characters = key;
+          
+          // 重新對齊位置（如果需要的話）
+          const textNodeId = group.getPluginData('targetId');
+          const textNode = textNodeId ? await figma.getNodeByIdAsync(textNodeId) as TextNode : null;
+          if (textNode) {
+            // 這裡可以加入重新對齊的邏輯，類似 realign 功能
+            const direction = group.getPluginData("direction") || msg.direction || "auto";
+            // 重新計算位置並更新
+            // ...可以參考 realign 中的邏輯
+          }
+          
+          figma.notify('Updated annotation successfully!');
+          console.log("[update-annotation] Updated annotation for", { key, project, uuid });
+        } else {
+          figma.notify('Cannot find the annotation to update.');
+        }
       }
     }
 

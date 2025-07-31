@@ -206,6 +206,7 @@
 </div>
 <script>
 let projectList = [];
+let currentAnnotationInfo = null; // 儲存當前標注資訊
 
 // 從 plugin 主程式取得專案資料
 function requestProjectList() {
@@ -353,10 +354,78 @@ window.onmessage = (event) => {
   const { pluginMessage } = event.data;
   console.log('[annotate-ui] window.onmessage', pluginMessage);
   if (pluginMessage && pluginMessage.type === 'content-result') {
+    
     if (pluginMessage.content) {
       previewContent.textContent = pluginMessage.content;
+      
+      // 檢查是否已標注
+      if (pluginMessage.isAnnotated) {
+        currentAnnotationInfo = {
+          uuid: pluginMessage.uuid,
+          keyName: pluginMessage.keyName,
+          projectName: pluginMessage.projectName
+        };
+                
+        // 填入已有的 key 值
+        input.value = pluginMessage.keyName || '';
+        
+        // 選中對應的 project
+        if (pluginMessage.projectName) {
+          selectProject(pluginMessage.projectName);
+        }
+        
+        // 改變按鈕文案
+        createBtn.textContent = 'Update';
+        
+        validateInput();
+      } else {
+        // 重置所有狀態
+        currentAnnotationInfo = null;
+        
+        // 清空輸入框
+        input.value = '';
+        
+        // 改變按鈕文案
+        createBtn.textContent = 'Create';
+        
+        // 重新選中第一個 project（如果有的話）
+        const firstRadio = document.querySelector('input[name="project"]');
+        if (firstRadio) {
+          firstRadio.checked = true;
+          updateRadioStyles();
+        }
+        
+        // 重置定位選項為 Auto
+        const autoPositionRadio = document.querySelector('input[name="position"][value="auto"]');
+        if (autoPositionRadio) {
+          autoPositionRadio.checked = true;
+          updatePositionRadioStyles();
+        }
+        
+        validateInput();
+      }
     } else {
       previewContent.textContent = "請選取要新增 lokalise key 的字串";
+      
+      // 完全重置狀態
+      currentAnnotationInfo = null;
+      input.value = '';
+      createBtn.textContent = 'Create';
+      
+      // 重置所有選項
+      const firstRadio = document.querySelector('input[name="project"]');
+      if (firstRadio) {
+        firstRadio.checked = true;
+        updateRadioStyles();
+      }
+      
+      const autoPositionRadio = document.querySelector('input[name="position"][value="auto"]');
+      if (autoPositionRadio) {
+        autoPositionRadio.checked = true;
+        updatePositionRadioStyles();
+      }
+      
+      validateInput();
     }
   }
   if (pluginMessage && pluginMessage.type === 'project-list') {
@@ -366,20 +435,25 @@ window.onmessage = (event) => {
   }
 };
 
-window.onload = () => {
-  console.log('[annotate-ui] window.onload');
-  requestProjectList();
-  parent.postMessage({ pluginMessage: { type: 'get-content', key: '', project: '' } }, '*');
-  parent.postMessage({ pluginMessage: { type: 'resize', width: document.body.scrollWidth, height: document.body.scrollHeight } }, '*');
-  input.focus();
-};
+// 新增選中特定 project 的函數
+function selectProject(projectName) {
+  const projectRadios = document.getElementsByName('project');
+  for (let radio of projectRadios) {
+    if (radio.value === projectName) {
+      radio.checked = true;
+      radio.dispatchEvent(new Event('change', { bubbles: true }));
+      break;
+    }
+  }
+}
 
 createBtn.onclick = () => {
   const project = getSelectedProject();
   const key = input.value;
   const valid = /^[A-Za-z0-9\-\_\.]+$/.test(key);
   const dir = getSelectedPosition();
-  console.log('[annotate-ui] createBtn.onclick', { project, key, valid, dir });
+  
+  console.log('[annotate-ui] createBtn.onclick', { project, key, valid, dir, currentAnnotationInfo });
 
   if (!key || !valid) {
     errorMsg.style.display = 'block';
@@ -388,8 +462,32 @@ createBtn.onclick = () => {
     errorMsg.style.display = 'none';
   }
 
-  parent.postMessage({ pluginMessage: { type: 'create-shapes', project, key, direction: dir } }, '*');
-  console.log('[annotate-ui] sent create-shapes', { project, key, direction: dir });
+  // 根據是否為更新模式發送不同的訊息
+  if (currentAnnotationInfo) {
+    // 更新模式
+    parent.postMessage({ 
+      pluginMessage: { 
+        type: 'update-annotation', 
+        uuid: currentAnnotationInfo.uuid,
+        project, 
+        key, 
+        direction: dir 
+      } 
+    }, '*');
+    console.log('[annotate-ui] sent update-annotation', { uuid: currentAnnotationInfo.uuid, project, key, direction: dir });
+  } else {
+    // 創建模式
+    parent.postMessage({ 
+      pluginMessage: { 
+        type: 'create-shapes', 
+        project, 
+        key, 
+        direction: dir 
+      } 
+    }, '*');
+    console.log('[annotate-ui] sent create-shapes', { project, key, direction: dir });
+  }
+  
   input.value = "";
   validateInput();
   input.focus();
