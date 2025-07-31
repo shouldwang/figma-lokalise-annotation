@@ -23,7 +23,7 @@
     .info-bar {
       display: flex;
       flex-direction: column;
-      padding: 16px 8px;
+      padding: 12px;
       align-items: stretch;
     }
     .chip-group {
@@ -76,7 +76,7 @@
       gap: 8px;
       flex: 1 1 auto;
       min-height: 0;
-      padding: 16px 8px 72px 8px;
+      padding: 12px 12px 80px 12px;
       background: #fafafa;
     }
     .card {
@@ -234,9 +234,7 @@
     }
     .error-msg {
       color: #ff3333;
-      font-size: 12px;
-      margin-top: 2px;
-      margin-bottom: 0;
+      font-size: 14px;
     }
     .disabled-text {
       color: #b3b3b3 !important;
@@ -555,8 +553,8 @@ function renderCardList(data, editingIdx = null) {
                 <button class="save-btn" id="save-btn">Save</button>
               </div>
               <input class="input-inline" id="edit-key" value="${row.keyName || ""}" autocomplete="off">
+              <div class="error-msg" id="edit-key-err" style="display:none"></div>
             </div>
-            <div class="error-msg" id="edit-key-err" style="display:none"></div>
             <div class="card-draft">${row.content || ""}</div>
           </div>
         `;
@@ -570,11 +568,11 @@ function renderCardList(data, editingIdx = null) {
           let keyVal = keyInput.value.replace(/[^A-Za-z0-9\-\_\.]/g, '');
           keyInput.value = keyVal;
           if (!keyVal) {
-            keyErr.textContent = "key 不得為空";
+            keyErr.textContent = "Key cannot be empty";
             keyErr.style.display = "block";
             valid = false;
           } else if (!/^[A-Za-z0-9\-\_\.]+$/.test(keyVal)) {
-            keyErr.textContent = "只允許小寫英文、數字、-、_、.";
+            keyErr.textContent = "Only uppercase and lowercase letters, numbers, -, _, . are allowed.";
             keyErr.style.display = "block";
             valid = false;
           } else {
