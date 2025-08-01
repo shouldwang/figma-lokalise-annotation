@@ -506,21 +506,247 @@ function getOutermostFrame(node) {
                     return;
                 const group = mainGroup.children.find(g => g.name.endsWith(`-${uuid}`));
                 if (group) {
-                    yield figma.loadFontAsync({ family: "DM Mono", style: "Medium" });
-                    // 更新 project 和 key 的文字
-                    group.findOne(n => n.name === "projectName").characters = project;
-                    group.findOne(n => n.name === "keyName").characters = key;
-                    // 重新對齊位置（如果需要的話）
-                    const textNodeId = group.getPluginData('targetId');
-                    const textNode = textNodeId ? yield figma.getNodeByIdAsync(textNodeId) : null;
-                    if (textNode) {
-                        // 這裡可以加入重新對齊的邏輯，類似 realign 功能
-                        const direction = group.getPluginData("direction") || msg.direction || "auto";
-                        // 重新計算位置並更新
-                        // ...可以參考 realign 中的邏輯
+                    const currentDirection = group.getPluginData("direction") || "auto";
+                    const newDirection = msg.direction || "auto";
+                    // 如果方向改變了，刪除舊標注並創建新標注
+                    if (currentDirection !== newDirection) {
+                        const textNodeId = group.getPluginData('targetId');
+                        const textNode = textNodeId ? yield figma.getNodeByIdAsync(textNodeId) : null;
+                        if (textNode) {
+                            // 刪除舊標注
+                            group.remove();
+                            // 模擬選中 text node 並創建新標注
+                            figma.currentPage.selection = [textNode];
+                            // 重新創建標注（複用 create-shapes 邏輯）
+                            yield figma.loadFontAsync({ family: "DM Mono", style: "Medium" });
+                            const newUuid = uuid; // 保持相同的 uuid
+                            // --- Create project frame ---
+                            const projectFrame = figma.createFrame();
+                            projectFrame.name = "project";
+                            projectFrame.layoutMode = "HORIZONTAL";
+                            projectFrame.primaryAxisSizingMode = "AUTO";
+                            projectFrame.counterAxisSizingMode = "AUTO";
+                            projectFrame.paddingLeft = projectFrame.paddingRight = 4;
+                            projectFrame.paddingTop = projectFrame.paddingBottom = 2;
+                            projectFrame.cornerRadius = 1;
+                            projectFrame.fills = [{ type: "SOLID", color: { r: 0.114, g: 0.306, b: 0.847 } }];
+                            projectFrame.primaryAxisAlignItems = "MIN";
+                            projectFrame.counterAxisAlignItems = "MIN";
+                            const projectText = figma.createText();
+                            projectText.name = "projectName";
+                            projectText.fontName = { family: "DM Mono", style: "Medium" };
+                            projectText.fontSize = 10;
+                            projectText.characters = project;
+                            projectText.fills = [{ type: "SOLID", color: { r: 1, g: 1, b: 1 } }];
+                            projectFrame.appendChild(projectText);
+                            // --- Create key-content frame ---
+                            const keyContentFrame = figma.createFrame();
+                            keyContentFrame.name = "key-content";
+                            keyContentFrame.layoutMode = "VERTICAL";
+                            keyContentFrame.primaryAxisSizingMode = "AUTO";
+                            keyContentFrame.counterAxisSizingMode = "AUTO";
+                            keyContentFrame.itemSpacing = 2;
+                            keyContentFrame.primaryAxisAlignItems = "MIN";
+                            keyContentFrame.counterAxisAlignItems = "MIN";
+                            const keyName = figma.createText();
+                            keyName.name = "keyName";
+                            keyName.fontName = { family: "DM Mono", style: "Medium" };
+                            keyName.fontSize = 12;
+                            keyName.characters = key;
+                            keyName.fills = [{ type: "SOLID", color: { r: 0, g: 0, b: 0 } }];
+                            const contentText = figma.createText();
+                            contentText.name = "content";
+                            contentText.fontName = { family: "DM Mono", style: "Medium" };
+                            contentText.fontSize = 12;
+                            contentText.characters = textNode.characters;
+                            contentText.fills = [{ type: "SOLID", color: { r: 0.5, g: 0.5, b: 0.5 } }];
+                            contentText.visible = false;
+                            keyContentFrame.appendChild(keyName);
+                            keyContentFrame.appendChild(contentText);
+                            // --- Create labelFrame ---
+                            const labelFrame = figma.createFrame();
+                            labelFrame.layoutMode = "HORIZONTAL";
+                            labelFrame.primaryAxisSizingMode = "AUTO";
+                            labelFrame.counterAxisSizingMode = "AUTO";
+                            labelFrame.paddingLeft = labelFrame.paddingRight = 8;
+                            labelFrame.paddingTop = labelFrame.paddingBottom = 6;
+                            labelFrame.cornerRadius = 2;
+                            labelFrame.fills = [{ type: "SOLID", color: { r: 1, g: 1, b: 1 } }];
+                            labelFrame.strokes = [{ type: "SOLID", color: { r: 0.114, g: 0.306, b: 0.847 } }];
+                            labelFrame.strokeWeight = 2;
+                            labelFrame.primaryAxisAlignItems = "CENTER";
+                            labelFrame.counterAxisAlignItems = "MIN";
+                            labelFrame.itemSpacing = 8;
+                            labelFrame.appendChild(projectFrame);
+                            labelFrame.appendChild(keyContentFrame);
+                            // --- Calculate direction and positioning ---
+                            const abs = textNode.absoluteTransform;
+                            const x = abs[0][2], y = abs[1][2];
+                            const outerFrame = getOutermostFrame(textNode);
+                            const frameLeft = outerFrame ? outerFrame.absoluteTransform[0][2] : 0;
+                            const frameRight = outerFrame ? frameLeft + outerFrame.width : figma.currentPage.width;
+                            const gapLeft = x - frameLeft;
+                            const gapRight = frameRight - (x + textNode.width);
+                            const gapTop = y - (outerFrame ? outerFrame.absoluteTransform[1][2] : 0);
+                            const gapBottom = (outerFrame ? outerFrame.absoluteTransform[1][2] + outerFrame.height : figma.currentPage.height) - (y + textNode.height);
+                            let minDir;
+                            if (newDirection === "auto") {
+                                const gaps = [
+                                    { dir: "left", value: gapLeft },
+                                    { dir: "right", value: gapRight },
+                                    { dir: "top", value: gapTop },
+                                    { dir: "bottom", value: gapBottom }
+                                ];
+                                gaps.sort((a, b) => a.value - b.value);
+                                minDir = gaps[0].dir;
+                            }
+                            else {
+                                minDir = newDirection;
+                            }
+                            const circle = figma.createEllipse();
+                            circle.resize(6, 6);
+                            circle.fills = [{ type: 'SOLID', color: { r: 0.114, g: 0.306, b: 0.847 } }];
+                            circle.strokes = [];
+                            const labelPadding = 60;
+                            let lineLength = 60;
+                            let groupFrame = figma.createFrame();
+                            groupFrame.name = "text-naming-card";
+                            groupFrame.primaryAxisSizingMode = "AUTO";
+                            groupFrame.counterAxisSizingMode = "AUTO";
+                            groupFrame.itemSpacing = 0;
+                            groupFrame.fills = [];
+                            groupFrame.primaryAxisAlignItems = "CENTER";
+                            groupFrame.counterAxisAlignItems = "CENTER";
+                            const vector = figma.createVector();
+                            if (minDir === "right") {
+                                groupFrame.layoutMode = "HORIZONTAL";
+                                lineLength = Math.max(gapRight + labelPadding, 60);
+                                vector.resize(lineLength, 2);
+                                vector.vectorPaths = [{ data: `M 0 1 L ${lineLength} 1`, windingRule: "NONZERO" }];
+                            }
+                            else if (minDir === "left") {
+                                groupFrame.layoutMode = "HORIZONTAL";
+                                lineLength = Math.max(gapLeft + labelPadding, 60);
+                                vector.resize(lineLength, 2);
+                                vector.vectorPaths = [{ data: `M ${lineLength} 1 L 0 1`, windingRule: "NONZERO" }];
+                            }
+                            else if (minDir === "top") {
+                                groupFrame.layoutMode = "VERTICAL";
+                                lineLength = Math.max(gapTop + labelPadding, 60);
+                                vector.resize(2, lineLength);
+                                vector.vectorPaths = [{ data: `M 1 0 L 1 ${lineLength}`, windingRule: "NONZERO" }];
+                            }
+                            else {
+                                groupFrame.layoutMode = "VERTICAL";
+                                lineLength = Math.max(gapBottom + labelPadding, 60);
+                                vector.resize(2, lineLength);
+                                vector.vectorPaths = [{ data: `M 1 ${lineLength} L 1 0`, windingRule: "NONZERO" }];
+                            }
+                            vector.strokeWeight = 2;
+                            vector.strokes = [{ type: 'SOLID', color: { r: 0.114, g: 0.306, b: 0.847 } }];
+                            vector.strokeCap = "NONE";
+                            vector.dashPattern = [4, 4];
+                            if (minDir === "right") {
+                                groupFrame.primaryAxisAlignItems = "MIN";
+                                groupFrame.appendChild(circle);
+                                groupFrame.appendChild(vector);
+                                groupFrame.appendChild(labelFrame);
+                            }
+                            else if (minDir === "left") {
+                                groupFrame.primaryAxisAlignItems = "MAX";
+                                groupFrame.appendChild(labelFrame);
+                                groupFrame.appendChild(vector);
+                                groupFrame.appendChild(circle);
+                            }
+                            else if (minDir === "top") {
+                                groupFrame.primaryAxisAlignItems = "CENTER";
+                                groupFrame.appendChild(labelFrame);
+                                groupFrame.appendChild(vector);
+                                groupFrame.appendChild(circle);
+                            }
+                            else {
+                                groupFrame.primaryAxisAlignItems = "CENTER";
+                                groupFrame.appendChild(circle);
+                                groupFrame.appendChild(vector);
+                                groupFrame.appendChild(labelFrame);
+                            }
+                            // Positioning
+                            const groupXMap = {
+                                right: x + textNode.width,
+                                left: x - groupFrame.width,
+                                top: x + textNode.width / 2 - groupFrame.width / 2,
+                                bottom: x + textNode.width / 2 - groupFrame.width / 2
+                            };
+                            const groupYMap = {
+                                right: y + textNode.height / 2 - groupFrame.height / 2,
+                                left: y + textNode.height / 2 - groupFrame.height / 2,
+                                top: y - groupFrame.height,
+                                bottom: y + textNode.height
+                            };
+                            groupFrame.x = 0;
+                            groupFrame.y = 0;
+                            const wrapper = figma.group([groupFrame], figma.currentPage);
+                            wrapper.name = `lokaliseAnnotation-${newUuid}`;
+                            wrapper.x = groupXMap[minDir];
+                            wrapper.y = groupYMap[minDir];
+                            wrapper.locked = true;
+                            wrapper.setPluginData("targetId", textNode.id);
+                            wrapper.setPluginData("uuid", newUuid);
+                            wrapper.setPluginData("direction", newDirection);
+                            mainGroup.locked = false;
+                            mainGroup.appendChild(wrapper);
+                            mainGroup.locked = true;
+                            figma.notify('Updated annotation with new positioning!');
+                            console.log("[update-annotation] Recreated annotation with new direction", { key, project, uuid: newUuid, direction: newDirection });
+                        }
                     }
-                    figma.notify('Updated annotation successfully!');
-                    console.log("[update-annotation] Updated annotation for", { key, project, uuid });
+                    else {
+                        // 方向沒改變，只更新文字內容並重新對位
+                        yield figma.loadFontAsync({ family: "DM Mono", style: "Medium" });
+                        // 更新 project 和 key 的文字
+                        group.findOne(n => n.name === "projectName").characters = project;
+                        group.findOne(n => n.name === "keyName").characters = key;
+                        // 重新對齊位置
+                        const textNodeId = group.getPluginData('targetId');
+                        const textNode = textNodeId ? yield figma.getNodeByIdAsync(textNodeId) : null;
+                        if (textNode) {
+                            const frame = group.findOne(n => n.type === "FRAME" && n.name === "text-naming-card");
+                            if (frame) {
+                                const t = textNode.absoluteTransform;
+                                const x = t[0][2], y = t[1][2];
+                                const w = textNode.width, h = textNode.height;
+                                const outer = getOutermostFrame(textNode);
+                                const leftBound = outer ? outer.absoluteTransform[0][2] : 0;
+                                const rightBound = outer ? leftBound + outer.width : figma.currentPage.width;
+                                const topBound = outer ? outer.absoluteTransform[1][2] : 0;
+                                const bottomBound = outer ? topBound + outer.height : figma.currentPage.height;
+                                const gaps = {
+                                    left: x - leftBound,
+                                    right: rightBound - (x + w),
+                                    top: y - topBound,
+                                    bottom: bottomBound - (y + h)
+                                };
+                                const direction = group.getPluginData("direction") || "auto";
+                                let dir;
+                                if (direction === "auto") {
+                                    dir = (Object.entries(gaps).sort((a, b) => a[1] - b[1])[0][0]);
+                                }
+                                else {
+                                    dir = direction;
+                                }
+                                const positions = {
+                                    right: { x: x + w, y: y + h / 2 - frame.height / 2 },
+                                    left: { x: x - frame.width, y: y + h / 2 - frame.height / 2 },
+                                    top: { x: x + w / 2 - frame.width / 2, y: y - frame.height },
+                                    bottom: { x: x + w / 2 - frame.width / 2, y: y + h }
+                                };
+                                group.x = positions[dir].x;
+                                group.y = positions[dir].y;
+                            }
+                        }
+                        figma.notify('Updated annotation successfully!');
+                        console.log("[update-annotation] Updated annotation text only", { key, project, uuid });
+                    }
                 }
                 else {
                     figma.notify('Cannot find the annotation to update.');
