@@ -470,11 +470,11 @@ function renderProjectChipGroup() {
   const projects = getProjectList();
   const countMap = {};
   projects.forEach(proj => countMap[proj] = 0);
-  currentData.forEach(row => {
+  mergeIdenticalEntries(currentData).forEach(row => {
     if (countMap.hasOwnProperty(row.projectName)) countMap[row.projectName]++;
   });
   // All 筆數
-  const allCount = currentData.length;
+  const allCount = mergeIdenticalEntries(currentData).length;
   // 產生 All chip
   const allChip = document.createElement('div');
   allChip.className = 'chip' + (filterProject === "All" ? ' selected' : '');
@@ -508,22 +508,41 @@ function renderProjectChipGroup() {
 }
 
 function findDuplicateKeyNamesDetail(data) {
-  const count = {};
+  const groups = {};
   data.forEach(row => {
     const key = (row.projectName || "") + "||" + (row.keyName || "");
-    if (!count[key]) count[key] = 0;
-    count[key]++;
+    if (!groups[key]) groups[key] = [];
+    groups[key].push(row);
   });
-  return Object.entries(count)
-    .filter(([k, v]) => v > 1)
-    .map(([k, v]) => {
+  
+  return Object.entries(groups)
+    .filter(([k, rows]) => rows.length > 1)
+    .map(([k, rows]) => {
       const [project, keyName] = k.split("||");
-      return [project, keyName, v];
-    });
+      const uniqueContents = [...new Set(rows.map(r => r.content || ""))];
+      return [project, keyName, rows.length, uniqueContents.length > 1];
+    })
+    .filter(([project, keyName, count, hasConflict]) => hasConflict); // Only return conflicts
+}
+
+function mergeIdenticalEntries(data) {
+  const groups = {};
+  const merged = [];
+  
+  data.forEach(row => {
+    const key = (row.projectName || "") + "||" + (row.keyName || "") + "||" + (row.content || "");
+    if (!groups[key]) {
+      groups[key] = row;
+      merged.push(row);
+    }
+    // Identical entries are automatically skipped
+  });
+  
+  return merged;
 }
 
 function getFilteredData() {
-  let filtered = currentData.filter(row => {
+  let filtered = mergeIdenticalEntries(currentData).filter(row => {
     const projectMatch = (filterProject === "All" || row.projectName === filterProject);
     const searchMatch = (!searchKey || (row.keyName && row.keyName.toLowerCase().includes(searchKey.toLowerCase())));
     return projectMatch && searchMatch;
@@ -536,11 +555,11 @@ function getFilteredData() {
 }
 
 function renderCardList(data, editingIdx = null) {
-  updateExportBtnAndDupWarning(currentData);
+  updateExportBtnAndDupWarning(mergeIdenticalEntries(currentData));
   const cardList = document.getElementById("cardList");
   cardList.innerHTML = "";
   if (Array.isArray(data) && data.length > 0) {
-    const dupSet = new Set(findDuplicateKeyNamesDetail(currentData).map(([k]) => k));
+    const dupSet = new Set(findDuplicateKeyNamesDetail(mergeIdenticalEntries(currentData)).map(([project, keyName]) => project + "||" + keyName));
     data.forEach((row, idx) => {
       const card = document.createElement("div");
       card.className = "card" +
@@ -664,16 +683,16 @@ function updateExportBtnAndDupWarning(data) {
   const exportBtn = document.getElementById("exportBtn");
   const dupWarningsContainer = document.getElementById("dupWarningsContainer");
 
-  // 詳列所有重複 key（以 project+keyName 為單位）
+  // 詳列所有重複 key（以 project+keyName 為單位，但只顯示 content 衝突的）
   const dupList = findDuplicateKeyNamesDetail(data);
   dupWarningsContainer.innerHTML = "";
   if (dupList.length > 0) {
     exportBtn.disabled = true;
-    dupList.forEach(([project, key, count]) => {
+    dupList.forEach(([project, key, count, hasConflict]) => {
       const keyId = project + "||" + key;
       const warnDiv = document.createElement("div");
       warnDiv.className = "dup-warning-list";
-      warnDiv.innerHTML = `<span>You have ${count} duplicate entries for ${key} in ${project}.</span><button class="action-btn dupCheck-btn" data-key="${keyId}" style="font-size:14px; padding:4px 8px; border-radius:4px; border:none; background:#ffffff; color:#333; cursor:pointer; white-space:nowrap; min-width:fit-content;">${showDupKeys.length === 1 && showDupKeys[0] === keyId ? "show all" : "check"}</button>`;
+      warnDiv.innerHTML = `<span>You have conflicting content for ${key} in ${project}.</span><button class="action-btn dupCheck-btn" data-key="${keyId}" style="font-size:14px; padding:4px 8px; border-radius:4px; border:none; background:#ffffff; color:#333; cursor:pointer; white-space:nowrap; min-width:fit-content;">${showDupKeys.length === 1 && showDupKeys[0] === keyId ? "show all" : "check"}</button>`;
       dupWarningsContainer.appendChild(warnDiv);
     });
     dupWarningsContainer.querySelectorAll('.dupCheck-btn').forEach(btn => {
@@ -696,7 +715,7 @@ function updateExportDropdownState() {
   const projects = getProjectList();
   const countMap = {};
   projects.forEach(proj => countMap[proj] = 0);
-  currentData.forEach(row => {
+  mergeIdenticalEntries(currentData).forEach(row => {
     if (countMap.hasOwnProperty(row.projectName)) {
       countMap[row.projectName]++;
     }
@@ -760,7 +779,7 @@ function handleExportAction(action) {
     return;
   } else {
     const proj = action;
-    let projRows = currentData.filter(row => row.projectName === proj);
+    let projRows = mergeIdenticalEntries(currentData).filter(row => row.projectName === proj);
     // Add header for individual project export
     const header = ["Key", "en", "ja", "en-US", "zh-TW", "zh-CN"].map(escapeCSV).join(",");
     rows = [header, ...projRows.map(row =>
@@ -774,8 +793,9 @@ function handleExportAction(action) {
 // New function to download all projects as a bundle
 async function downloadProjectBundle(today) {
   const projects = getProjectList();
+  const mergedData = mergeIdenticalEntries(currentData);
   const projectsWithData = projects.filter(proj => 
-    currentData.some(row => row.projectName === proj)
+    mergedData.some(row => row.projectName === proj)
   );
   
   if (projectsWithData.length === 0) return;
@@ -784,7 +804,7 @@ async function downloadProjectBundle(today) {
   
   // Add each project as a CSV file to the ZIP
   projectsWithData.forEach(proj => {
-    const projRows = currentData.filter(row => row.projectName === proj);
+    const projRows = mergedData.filter(row => row.projectName === proj);
     const header = ["Key", "en", "ja", "en-US", "zh-TW", "zh-CN"].map(escapeCSV).join(",");
     const csvContent = [header, ...projRows.map(row =>
       [row.keyName, row.content, "", "", "", ""].map(escapeCSV).join(",")
