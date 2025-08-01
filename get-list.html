@@ -3,6 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <title>Lokalization List</title>
+  <!-- Add JSZip library -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
   <style>
     body {
       font-family: 'Segoe UI', 'Helvetica Neue', Arial, 'Liberation Sans', 'Nimbus Sans', 'sans-serif';
@@ -57,6 +59,7 @@
       color: #333;
       cursor: pointer;
       transition: border 0.15s, color 0.15s;
+      -webkit-user-select: none;
       user-select: none;
       white-space: nowrap;        
     }
@@ -70,10 +73,9 @@
       justify-content: space-between;
       align-items: center;
       gap: 8px;
-      padding: 8px;
+      padding: 8px 12px;
       font-size: 14px;
       font-weight: 600;
-      border-radius: 4px;
       color: #e00;
       background: #ee000011;
     }
@@ -671,7 +673,7 @@ function updateExportBtnAndDupWarning(data) {
       const keyId = project + "||" + key;
       const warnDiv = document.createElement("div");
       warnDiv.className = "dup-warning-list";
-      warnDiv.innerHTML = `<span>${project} - ${key} 有重複 ${count} 筆資料</span><button class="action-btn dupCheck-btn" data-key="${keyId}" style="font-size:14px; padding:4px 12px; border-radius:4px; border:none; background:#ffffff; color:#333; cursor:pointer; margin-left:12px;">${showDupKeys.length === 1 && showDupKeys[0] === keyId ? "show all" : "check"}</button>`;
+      warnDiv.innerHTML = `<span>You have ${count} duplicate entries for ${key} in ${project}.</span><button class="action-btn dupCheck-btn" data-key="${keyId}" style="font-size:14px; padding:4px 8px; border-radius:4px; border:none; background:#ffffff; color:#333; cursor:pointer; white-space:nowrap; min-width:fit-content;">${showDupKeys.length === 1 && showDupKeys[0] === keyId ? "show all" : "check"}</button>`;
       dupWarningsContainer.appendChild(warnDiv);
     });
     dupWarningsContainer.querySelectorAll('.dupCheck-btn').forEach(btn => {
@@ -699,8 +701,9 @@ function updateExportDropdownState() {
       countMap[row.projectName]++;
     }
   });
-  // Google Sheet
-  document.querySelector('.export-count[data-count-for="google-sheet"]').textContent = `(${currentData.length})`;
+  // Download Bundle
+  const totalProjects = projects.filter(proj => countMap[proj] > 0).length;
+  document.querySelector('.export-count[data-count-for="download-bundle"]').textContent = `(${totalProjects} projects)`;
   projects.forEach(proj => {
     const item = document.querySelector(`.dropdown-item[data-action="${proj}"]`);
     const countSpan = document.querySelector(`.export-count[data-count-for="${proj}"]`);
@@ -723,6 +726,15 @@ function updateExportDropdownState() {
 }
 
 // 匯出 CSV
+function escapeCSV(value) {
+  if (value == null) return '';
+  const str = String(value);
+  if (str.includes(',') || str.includes('"') || str.includes('\n') || str.includes('\r')) {
+    return '"' + str.replace(/"/g, '""') + '"';
+  }
+  return str;
+}
+
 function exportCSVNoHeader(rows, filename) {
   const csv = rows.join("\n");
   const blob = new Blob([csv], { type: "text/csv" });
@@ -742,28 +754,75 @@ function handleExportAction(action) {
   let rows = [];
   let filename = "";
   const today = (new Date()).toISOString().slice(0,10).replace(/-/g, '');
-  if (action === "google-sheet") {
-    rows = currentData.map(row =>
-      [row.projectName, row.keyName, row.content].map(escapeCSV).join(",")
-    );
-    filename = `proj-google-sheet-${today}.csv`;
+  if (action === "download-bundle") {
+    // Download all projects as separate CSV files in a ZIP
+    downloadProjectBundle(today);
+    return;
   } else {
     const proj = action;
     let projRows = currentData.filter(row => row.projectName === proj);
-    rows = projRows.map(row =>
-      [row.keyName, row.content].map(escapeCSV).join(",")
-    );
+    // Add header for individual project export
+    const header = ["Key", "en", "ja", "en-US", "zh-TW", "zh-CN"].map(escapeCSV).join(",");
+    rows = [header, ...projRows.map(row =>
+      [row.keyName, row.content, "", "", "", ""].map(escapeCSV).join(",")
+    )];
     filename = `proj-${proj}-${today}.csv`;
   }
   exportCSVNoHeader(rows, filename);
 }
 
-function escapeCSV(val) {
-  if (typeof val !== "string") return "";
-  if (val.includes(",") || val.includes('"') || val.includes("\n")) {
-    return `"${val.replace(/"/g, '""')}"`;
+// New function to download all projects as a bundle
+async function downloadProjectBundle(today) {
+  const projects = getProjectList();
+  const projectsWithData = projects.filter(proj => 
+    currentData.some(row => row.projectName === proj)
+  );
+  
+  if (projectsWithData.length === 0) return;
+  
+  const zip = new JSZip();
+  
+  // Add each project as a CSV file to the ZIP
+  projectsWithData.forEach(proj => {
+    const projRows = currentData.filter(row => row.projectName === proj);
+    const header = ["Key", "en", "ja", "en-US", "zh-TW", "zh-CN"].map(escapeCSV).join(",");
+    const csvContent = [header, ...projRows.map(row =>
+      [row.keyName, row.content, "", "", "", ""].map(escapeCSV).join(",")
+    )].join("\n");
+    
+    zip.file(`proj-${proj}-${today}.csv`, csvContent);
+  });
+  
+  // Generate and download the ZIP file
+  try {
+    const content = await zip.generateAsync({type: "blob"});
+    const url = URL.createObjectURL(content);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `lokalise-projects-bundle-${today}.zip`;
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(() => {
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }, 0);
+  } catch (error) {
+    console.error("Error creating ZIP file:", error);
+    // Fallback to individual downloads with user confirmation
+    if (confirm(`Failed to create ZIP bundle. Download ${projectsWithData.length} files individually instead?`)) {
+      projectsWithData.forEach((proj, index) => {
+        setTimeout(() => {
+          const projRows = currentData.filter(row => row.projectName === proj);
+          const header = ["Key", "en", "ja", "en-US", "zh-TW", "zh-CN"].map(escapeCSV).join(",");
+          const rows = [header, ...projRows.map(row =>
+            [row.keyName, row.content, "", "", "", ""].map(escapeCSV).join(",")
+          )];
+          const filename = `proj-${proj}-${today}.csv`;
+          exportCSVNoHeader(rows, filename);
+        }, index * 1000); // 1 second delay between downloads
+      });
+    }
   }
-  return val;
 }
 
 // 搜尋 key
@@ -817,9 +876,13 @@ function bindExportDropdownEvents() {
 function renderExportDropdown() {
   const exportDropdown = document.getElementById("exportDropdown");
   const projects = getProjectList();
+  const projectsWithData = projects.filter(proj => 
+    currentData.some(row => row.projectName === proj)
+  );
+  
   let html = `
-    <div class="dropdown-item" data-action="google-sheet" tabindex="0">
-      Export All <span class="export-count" data-count-for="google-sheet">(${currentData.length})</span>
+    <div class="dropdown-item" data-action="download-bundle" tabindex="0">
+      Download Bundle <span class="export-count" data-count-for="download-bundle">(${projectsWithData.length} projects)</span>
     </div>
   `;
   projects.forEach(proj => {
@@ -827,7 +890,7 @@ function renderExportDropdown() {
     if (count > 0) {
       html += `
         <div class="dropdown-item" data-action="${proj}" tabindex="0">
-          Export to ${proj} <span class="export-count" data-count-for="${proj}">(${count})</span>
+          ${proj} <span class="export-count" data-count-for="${proj}">(${count})</span>
         </div>
       `;
     }

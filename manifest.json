@@ -22,7 +22,7 @@
   },
   "networkAccess": {
     "allowedDomains": [
-      "none"
+      "https://cdnjs.cloudflare.com"
     ]
   }
 }
