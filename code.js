@@ -95,9 +95,20 @@ const StorageUtils = {
     },
     getLanguageSettings() {
         return __awaiter(this, void 0, void 0, function* () {
-            return (yield figma.clientStorage.getAsync("languageSettings")) || {
+            const saved = yield figma.clientStorage.getAsync("languageSettings");
+            // If user has saved settings, return them
+            if (saved && saved.supportedLanguages && saved.supportedLanguages.length > 0) {
+                return saved;
+            }
+            // Otherwise return defaults with pre-selected languages
+            return {
                 baseLanguage: { code: 'en', name: 'English' },
-                supportedLanguages: []
+                supportedLanguages: [
+                    { code: 'ja', name: 'Japanese' },
+                    { code: 'en_US', name: 'English (United States)' },
+                    { code: 'zh_TW', name: 'Chinese Traditional' },
+                    { code: 'zh_CN', name: 'Chinese Simplified' }
+                ]
             };
         });
     },

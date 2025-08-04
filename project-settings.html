@@ -205,7 +205,6 @@
             id="baseLanguageInput" 
             class="language-search-input" 
             type="text" 
-            placeholder="English (en)"
           >
           <span class="language-dropdown-arrow">▼</span>
           <div id="baseLanguageDropdown" class="language-dropdown-list"></div>
@@ -771,6 +770,14 @@
       "zu": "Zulu"
     };
 
+    // Default supported languages
+    const defaultSupportedLanguages = [
+      { code: 'ja', name: 'Japanese' },
+      { code: 'en_US', name: 'English (United States)' },
+      { code: 'zh_TW', name: 'Chinese Traditional' },
+      { code: 'zh_CN', name: 'Chinese Simplified' }
+    ];
+
     // Format language display text as "Name (ISO)"
     function formatLanguageDisplay(code, name) {
       return `${name} (${code})`;
@@ -1154,6 +1161,11 @@
           if (Array.isArray(supportedLanguages)) {
             selectedSupportedLanguages = supportedLanguages;
           }
+          updateBaseLanguageDisplay();
+          updateSupportedLanguagesDisplay();
+        } else {
+          // First time setup - use defaults
+          selectedSupportedLanguages = [...defaultSupportedLanguages];
           updateBaseLanguageDisplay();
           updateSupportedLanguagesDisplay();
         }

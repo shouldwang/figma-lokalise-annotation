@@ -81,9 +81,22 @@ const StorageUtils = {
   },
 
   async getLanguageSettings(): Promise<any> {
-    return (await figma.clientStorage.getAsync("languageSettings")) || {
+    const saved = await figma.clientStorage.getAsync("languageSettings");
+    
+    // If user has saved settings, return them
+    if (saved && saved.supportedLanguages && saved.supportedLanguages.length > 0) {
+      return saved;
+    }
+    
+    // Otherwise return defaults with pre-selected languages
+    return {
       baseLanguage: { code: 'en', name: 'English' },
-      supportedLanguages: []
+      supportedLanguages: [
+        { code: 'ja', name: 'Japanese' },
+        { code: 'en_US', name: 'English (United States)' },
+        { code: 'zh_TW', name: 'Chinese Traditional' },
+        { code: 'zh_CN', name: 'Chinese Simplified' }
+      ]
     };
   },
 
