@@ -301,6 +301,23 @@ input.addEventListener('input', function(e) {
   validateInput();
 });
 
+// Add keyboard shortcut for create/update action
+input.addEventListener('keydown', function(e) {
+  // Check for Cmd+Enter (macOS) or Ctrl+Enter (Windows/Linux)
+  if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
+    console.log('[annotate-ui] keyboard shortcut triggered - Cmd/Ctrl+Enter');
+    e.preventDefault(); // Prevent default behavior
+    
+    // Only trigger if button is enabled
+    if (!createBtn.disabled) {
+      console.log('[annotate-ui] executing create/update action via keyboard shortcut');
+      createBtn.click();
+    } else {
+      console.log('[annotate-ui] keyboard shortcut ignored - button is disabled');
+    }
+  }
+});
+
 function updateRadioStyles() {
   if (!window.radioLabels) return;
   window.radioLabels.forEach(label => {
