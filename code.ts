@@ -8,11 +8,11 @@ const UIManager = {
   showByCommand(command: string) {
     console.log("[showUIByCommand] command:", command);
     if (command === "annotate-lokalise") {
-      figma.showUI(__uiFiles__.main, { width: 400, height: 600 });
+      figma.showUI(__uiFiles__.main, { width: 400, height: 640 });
     } else if (command === "get-lokalise-list") {
-      figma.showUI(__uiFiles__.secondary, { width: 400, height: 600 });
+      figma.showUI(__uiFiles__.secondary, { width: 400, height: 640 });
     } else if (command === "project-setting") {
-      figma.showUI(__uiFiles__.projectSetting, { width: 400, height: 600 });
+      figma.showUI(__uiFiles__.projectSetting, { width: 400, height: 640 });
     }
   }
 };
@@ -78,6 +78,17 @@ const StorageUtils = {
       arr = projects.split(",").map((s: string) => s.trim()).filter(Boolean);
     }
     await figma.clientStorage.setAsync("lokaliseProjects", arr);
+  },
+
+  async getLanguageSettings(): Promise<any> {
+    return (await figma.clientStorage.getAsync("languageSettings")) || {
+      baseLanguage: { code: 'en', name: 'English' },
+      supportedLanguages: []
+    };
+  },
+
+  async saveLanguageSettings(languageSettings: any): Promise<void> {
+    await figma.clientStorage.setAsync("languageSettings", languageSettings);
   }
 };
 
@@ -489,6 +500,19 @@ const MessageHandlers = {
       console.log("[onmessage] Sent project-list:", projects);
       return true;
     }
+
+    if (msg.type === "save-language-settings") {
+      await StorageUtils.saveLanguageSettings(msg.languageSettings);
+      console.log("[onmessage] Saved language settings:", msg.languageSettings);
+      return true;
+    }
+
+    if (msg.type === "get-language-settings") {
+      const languageSettings = await StorageUtils.getLanguageSettings();
+      figma.ui.postMessage({ type: "language-settings", languageSettings });
+      console.log("[onmessage] Sent language-settings", languageSettings);
+      return true;
+    }
     
     return false;
   },
@@ -653,4 +677,3 @@ const MessageHandlers = {
     }
   };
 })();
-              

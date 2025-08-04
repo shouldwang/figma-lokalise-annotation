@@ -253,14 +253,16 @@
     .fab-container {
       width: calc(100% - 16px);
       position: fixed;
-      bottom: 16px;
-      left: 8px;
+      bottom: 0px;
       display: flex;
       flex-direction: row;
       align-items: stretch;
       justify-content: space-between;
       gap: 16px;
       z-index: 1000;
+      padding: 16px 8px;
+      background: linear-gradient(0deg, #ffffff, transparent);
+      backdrop-filter: blur(0.5px);
     }
     
     .fab-search-container {
@@ -418,8 +420,14 @@ let filterProject = "All";
 let searchKey = "";
 let showDupKeys = [];
 let projectList = [];
+let languageSettings = {
+  baseLanguage: { code: 'en', name: 'English' },
+  supportedLanguages: []
+};
 
-function getProjectList() { return projectList; }
+function getProjectList() { 
+  return projectList; 
+}
 
 // --- chip group 拖拽功能 ---
 function initChipGroupDrag() {
@@ -723,7 +731,10 @@ function updateExportDropdownState() {
   });
   // Download Bundle
   const totalProjects = projects.filter(proj => countMap[proj] > 0).length;
-  document.querySelector('.export-count[data-count-for="download-bundle"]').textContent = `(${totalProjects} projects)`;
+  const bundleCountElement = document.querySelector('.export-count[data-count-for="download-bundle"]');
+  if (bundleCountElement) {
+    bundleCountElement.textContent = `(${totalProjects} projects)`;
+  }
   projects.forEach(proj => {
     const item = document.querySelector(`.dropdown-item[data-action="${proj}"]`);
     const countSpan = document.querySelector(`.export-count[data-count-for="${proj}"]`);
@@ -770,10 +781,28 @@ function exportCSVNoHeader(rows, filename) {
   }, 0);
 }
 
+function generateCSVHeader() {
+  const headers = ["Key", languageSettings.baseLanguage.code];
+  languageSettings.supportedLanguages.forEach(lang => {
+    headers.push(lang.code);
+  });
+  return headers.map(escapeCSV).join(",");
+}
+
+function generateCSVRow(row) {
+  const rowData = [row.keyName, row.content];
+  // Add empty values for each supported language
+  languageSettings.supportedLanguages.forEach(() => {
+    rowData.push("");
+  });
+  return rowData.map(escapeCSV).join(",");
+}
+
 function handleExportAction(action) {
   let rows = [];
   let filename = "";
   const today = (new Date()).toISOString().slice(0,10).replace(/-/g, '');
+  
   if (action === "download-bundle") {
     // Download all projects as separate CSV files in a ZIP
     downloadProjectBundle(today);
@@ -782,10 +811,8 @@ function handleExportAction(action) {
     const proj = action;
     let projRows = mergeIdenticalEntries(currentData).filter(row => row.projectName === proj);
     // Add header for individual project export
-    const header = ["Key", "en", "ja", "en-US", "zh-TW", "zh-CN"].map(escapeCSV).join(",");
-    rows = [header, ...projRows.map(row =>
-      [row.keyName, row.content, "", "", "", ""].map(escapeCSV).join(",")
-    )];
+    const header = generateCSVHeader();
+    rows = [header, ...projRows.map(row => generateCSVRow(row))];
     filename = `proj-${proj}-${today}.csv`;
   }
   exportCSVNoHeader(rows, filename);
@@ -806,10 +833,8 @@ async function downloadProjectBundle(today) {
   // Add each project as a CSV file to the ZIP
   projectsWithData.forEach(proj => {
     const projRows = mergedData.filter(row => row.projectName === proj);
-    const header = ["Key", "en", "ja", "en-US", "zh-TW", "zh-CN"].map(escapeCSV).join(",");
-    const csvContent = [header, ...projRows.map(row =>
-      [row.keyName, row.content, "", "", "", ""].map(escapeCSV).join(",")
-    )].join("\n");
+    const header = generateCSVHeader();
+    const csvContent = [header, ...projRows.map(row => generateCSVRow(row))].join("\n");
     
     zip.file(`proj-${proj}-${today}.csv`, csvContent);
   });
@@ -833,11 +858,9 @@ async function downloadProjectBundle(today) {
     if (confirm(`Failed to create ZIP bundle. Download ${projectsWithData.length} files individually instead?`)) {
       projectsWithData.forEach((proj, index) => {
         setTimeout(() => {
-          const projRows = currentData.filter(row => row.projectName === proj);
-          const header = ["Key", "en", "ja", "en-US", "zh-TW", "zh-CN"].map(escapeCSV).join(",");
-          const rows = [header, ...projRows.map(row =>
-            [row.keyName, row.content, "", "", "", ""].map(escapeCSV).join(",")
-          )];
+          const projRows = mergedData.filter(row => row.projectName === proj);
+          const header = generateCSVHeader();
+          const rows = [header, ...projRows.map(row => generateCSVRow(row))];
           const filename = `proj-${proj}-${today}.csv`;
           exportCSVNoHeader(rows, filename);
         }, index * 1000); // 1 second delay between downloads
@@ -938,6 +961,12 @@ window.onmessage = (event) => {
     projectList = Array.isArray(pluginMessage.projects) ? pluginMessage.projects : [];
     updateAllUI();
   }
+  if (pluginMessage && pluginMessage.type === "language-settings") {
+    if (pluginMessage.languageSettings) {
+      languageSettings = pluginMessage.languageSettings;
+      console.log("[get-list] Updated language settings:", languageSettings);
+    }
+  }
 };
 
 function updateAllUI() {
@@ -958,6 +987,7 @@ window.onload = () => {
   updateExportDropdownState();
   parent.postMessage({ pluginMessage: { type: 'get-lokalise-list' } }, '*');
   parent.postMessage({ pluginMessage: { type: 'get-projects' } }, '*');
+  parent.postMessage({ pluginMessage: { type: 'get-language-settings' } }, '*');
 };
   </script>
 </body>

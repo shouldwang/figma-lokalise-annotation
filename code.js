@@ -16,13 +16,13 @@ const UIManager = {
     showByCommand(command) {
         console.log("[showUIByCommand] command:", command);
         if (command === "annotate-lokalise") {
-            figma.showUI(__uiFiles__.main, { width: 400, height: 600 });
+            figma.showUI(__uiFiles__.main, { width: 400, height: 640 });
         }
         else if (command === "get-lokalise-list") {
-            figma.showUI(__uiFiles__.secondary, { width: 400, height: 600 });
+            figma.showUI(__uiFiles__.secondary, { width: 400, height: 640 });
         }
         else if (command === "project-setting") {
-            figma.showUI(__uiFiles__.projectSetting, { width: 400, height: 600 });
+            figma.showUI(__uiFiles__.projectSetting, { width: 400, height: 640 });
         }
     }
 };
@@ -91,6 +91,19 @@ const StorageUtils = {
                 arr = projects.split(",").map((s) => s.trim()).filter(Boolean);
             }
             yield figma.clientStorage.setAsync("lokaliseProjects", arr);
+        });
+    },
+    getLanguageSettings() {
+        return __awaiter(this, void 0, void 0, function* () {
+            return (yield figma.clientStorage.getAsync("languageSettings")) || {
+                baseLanguage: { code: 'en', name: 'English' },
+                supportedLanguages: []
+            };
+        });
+    },
+    saveLanguageSettings(languageSettings) {
+        return __awaiter(this, void 0, void 0, function* () {
+            yield figma.clientStorage.setAsync("languageSettings", languageSettings);
         });
     }
 };
@@ -453,6 +466,17 @@ const MessageHandlers = {
                 const projects = yield StorageUtils.getProjects();
                 figma.ui.postMessage({ type: "project-list", projects });
                 console.log("[onmessage] Sent project-list:", projects);
+                return true;
+            }
+            if (msg.type === "save-language-settings") {
+                yield StorageUtils.saveLanguageSettings(msg.languageSettings);
+                console.log("[onmessage] Saved language settings:", msg.languageSettings);
+                return true;
+            }
+            if (msg.type === "get-language-settings") {
+                const languageSettings = yield StorageUtils.getLanguageSettings();
+                figma.ui.postMessage({ type: "language-settings", languageSettings });
+                console.log("[onmessage] Sent language-settings", languageSettings);
                 return true;
             }
             return false;
