@@ -3,407 +3,560 @@
 <head>
   <meta charset="UTF-8">
   <title>Lokalization List</title>
+  <!-- Add JSZip library -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
   <style>
-    html, body {
-      height: 100vh;
-      display: flex;
-      flex-direction: column;
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
     body {
       font-family: 'Segoe UI', 'Helvetica Neue', Arial, 'Liberation Sans', 'Nimbus Sans', 'sans-serif';
       margin: 0;
-      padding: 8px;
       background: #fff;
-      height: 100vh;
+      min-height: 100vh;
       box-sizing: border-box;
       display: flex;
       flex-direction: column;
+    }
+    body::-webkit-scrollbar {
+      display: none;
+    }
+    .sticky-bar {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: #fff;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.05);
     }
     .info-bar {
       display: flex;
-      justify-content: space-between;
-      margin-bottom: 8px;
       flex-direction: column;
       align-items: stretch;
     }
-    .info-bar > div:first-child {
+    .chip-group {
       display: flex;
+      gap: 8px;
+      padding: 12px;
+      flex-wrap: nowrap;             
+      overflow-x: auto;              
+      overflow-y: hidden;
+      -webkit-overflow-scrolling: touch;
+      cursor: grab;
+    }
+    .chip-group::-webkit-scrollbar {
+      display:none;
+    }
+    .chip-group.active {
+      cursor: grabbing;
+    }
+    .chip {
+      display: inline-flex;
+      align-items: center;
+      height: 30px;
+      padding: 0px 12px;
+      border-radius: 999px;
+      font-size: 14px;
+      font-weight: 400;
+      border: 1px solid #e6e6e6;
+      background: #fff;
+      color: #333;
+      cursor: pointer;
+      transition: border 0.15s, color 0.15s;
+      -webkit-user-select: none;
+      user-select: none;
+      white-space: nowrap;        
+    }
+    .chip.selected {
+      color: #fff;
+      background: #333;
+      z-index: 1;
+    }
+    .dup-warning-list {
+      display: flex;
+      justify-content: space-between;
       align-items: center;
       gap: 8px;
-      justify-content: flex-start;
-      min-height: 40px;
+      padding: 8px 12px;
+      font-size: 14px;
+      font-weight: 600;
+      color: #e00;
+      background: #ee000011;
+    }
+    .card-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      flex: 1 1 auto;
+      min-height: 0;
+      padding: 12px 12px 80px 12px;
+      background: #fafafa;
+    }
+    .card {
+      background: #fff;
+      border: 1px solid #E6E6E6;
+      border-radius: 4px;
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      transition: border-color 0.15s, box-shadow 0.15s;
       position: relative;
     }
-    .info-bar .count {
-      font-size: 15px;
-      color: #333;
+    .card:hover {
+      border-color: #CCCCCC;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.04);
     }
-    .info-bar .dup-warning-list {
+    .card.disabled {
+      pointer-events: none;
+      opacity: 0.3;
+    }
+    .card-duplicate {
+      box-shadow: 0 0 0 2px #ff333355;
+    }
+    .card-header {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      color: #ff3333;
-      font-size: 14px;
-      font-weight: 600;
-      margin: 8px 0 0 0;
-      white-space: pre-line;
-      background: rgba(255,0,0,0.05);
-      padding: 8px;
-      border-radius: 4px;
+      gap: 8px;
     }
-    }
-    .filter-dropdown {
-      position: relative;
-      display: inline-block;
-      margin-right: 0;
-    }
-    .dropdown {
-      position: relative;
-      display: inline-block;
-      margin-left: auto; /* 讓 exportBtn 貼齊最右 */
-    }
-    .filter-btn, #exportBtn, .search-input {
+    .project-label {
+      background: #1d4ed812;
+      border-radius: 1px;
+      font-family: 'DM Mono', 'Menlo', 'Consolas', monospace;
       font-size: 12px;
-      font-weight: 600;
-      height: 32px;
-      border-radius: 4px;
-      border: 1px solid #1d4ed8;
-      box-sizing: border-box;
-      transition: background 0.15s, color 0.15s, border 0.15s;
+      font-weight: 500;
+      color: #333333;
+      padding: 6px;
+      display: inline-block;
+      line-height: 1;
+    }
+    .card-actions {
+      display: flex;
+      gap: 8px;
+    }
+    .card-action-btn {
+      border: 1px solid #E6E6E6;
+      background: #fff;
+      border-radius: 2px;
+      height: 28px;
+      width: 28px;
+      font-size: 14px;
+      cursor: pointer;
+      transition: background 0.15s, border-color 0.15s;
+      outline: none;
+      position: relative;
       display: flex;
       align-items: center;
+      justify-content: center;
     }
-
-    .filter-btn, #exportBtn {
-      padding: 0 16px;
-      cursor: pointer;
+    .card-action-btn:hover {
+      background: #FAFAFA;
     }
-    #exportBtn {
+    .card-action-btn[disabled] {
+      color: #b3b3b3;
+      border-color: #eee;
+      cursor: not-allowed;
+      background: #fafafa;
+    }
+    .card-action-btn .tooltip {
+      display: none;
+      position: absolute;
+      bottom: 120%;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #222;
+      color: #fff;
+      font-size: 12px;
+      padding: 2px 8px;
+      border-radius: 4px;
+      white-space: nowrap;
+      z-index: 10;
+      pointer-events: none;
+    }
+    .card-action-btn:hover .tooltip {
+      display: block;
+    }
+    .card-key {
+      font-size: 15px;
+      font-family: 'DM Mono', 'Menlo', 'Consolas', monospace;
+      font-weight: 600;
+      color: #333333;
+      line-height: 1.5;
+      word-break: break-all;
+    }
+    .card-draft {
+      font-size: 15px;
+      font-weight: 400;
+      color: #333;
+      line-height: 1.5;
+      word-break: break-word;
+    }
+    .card-edit-row {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+    .card-edit-header {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      position: relative;
+    }
+    .edit-row-top {
+      display: flex;
+      flex-direction: row;
+      gap: 8px;
+      align-items: stretch;
+    }
+    .select-inline {
+      width: 100%;
+      min-width: 80px;
+      font-size: 14px;
+      flex: 1 1 auto;
+      height: 32px;
+      border: 1px solid #e6e6e6;
+      border-radius: 4px;
+      padding-right: 24px;
+    }
+    .save-btn {
+      flex: 0 0 auto;
+      height: 100%;
+      padding: 4px 16px;
+      font-size: 14px;
+      border-radius: 2px;
+      border: 1px solid #1d4ed8;
       background: #1d4ed8;
       color: #fff;
-      border: 1px solid #1d4ed8;
+      font-weight: 600;
+      transition: background 0.15s, border-color 0.15s;
     }
-    #exportBtn:disabled {
+    .save-btn:disabled {
       background: #e5e7eb;
       color: #b3b3b3;
       border: 1px solid #e5e7eb;
       cursor: not-allowed;
     }
-    .filter-menu {
-      display: none;
-      position: absolute;
-      top: 40px;
-      background: #fff;
-      border: 1px solid #eee;
-      border-radius: 4px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-      z-index: 200;
-      width: max-content;
-      min-width: 220px;
-      max-width: 50vw;
-      padding: 4px 0;
-    }
-    .filter-option {
-      padding: 12px 20px;
-      cursor: pointer;
-      font-size: 15px;
-      color: #222;
-      display: flex;
-      align-items: center;
-      transition: background 0.15s;
-    }
-    .filter-option:hover {
-      background: #f5f8ff;
-    }
-    .filter-option input[type="radio"] {
-      margin-right: 12px;
-    }
-    .filter-option .count-span {
-      color: #888;
-      margin-left: 4px;
-      font-size: 13px;
-    }
-    .search-input {
-      padding: 0 12px;
-      border: 1px solid #ccc;
-      background: #fff;
-      color: #333;
-      min-width: 160px;
-      margin-right: 0;
-      outline: none;
-      transition: border-color 0.15s;
-    }
-    .search-input:focus {
-      border-color: #1d4ed8;
-    }
-    .dropdown-menu {
-      display: none;
-      position: absolute;
-      right: 0;
-      top: 36px;
-      background: #fff;
-      border: 1px solid #eee;
-      border-radius: 4px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-      z-index: 200;
-      width: max-content;
-      min-width: 220px;
-      max-width: 50vw;
-      padding: 4px 0;
-    }
-    .dropdown-menu .dropdown-item {
-      padding: 12px 20px;
-      cursor: pointer;
-      font-size: 15px;
-      color: #222;
-      transition: background 0.15s;
-    }
-    .dropdown-menu .dropdown-item:hover {
-      background: #f5f8ff;
-    }
-    .dropdown-menu .dropdown-item.disabled {
-      color: #ddd !important;
-      cursor: not-allowed !important;
-      pointer-events: none !important;
-    }
-    .export-count {
-      color: #888;
-      margin-left: 4px;
-      font-size: 13px;
-    }
-    .table-container {
-      flex: 1 1 auto;
-      min-height: 0;
-      height:100%;
-      display: flex;
-      flex-direction: column;
-      background: #fff;
-      border-radius: 4px;
-      overflow: hidden;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.04);
-    }
-    .scroll-table {
-      overflow-x: auto;
-      overflow-y: auto;
-      max-height: 100%;
-    }
-    table {
+    .input-inline {
       width: 100%;
-      border-collapse: collapse;
-      background: #fff;
-      font-size: 15px;
-      table-layout: fixed;
-    }
-    th, td {
-      padding: 8px 16px;
-      border-bottom: 1px solid #dedede;
-      text-align: left;
-      line-height: 1.5;
-    }
-    th {
-      background: #f5f5f5;
       font-size: 14px;
-      font-weight: 500;
-      color: #666;
-      position: sticky;
-      top: 0;
-    }
-    td {
-      height: 49px;
-      font-size: 14px;
-      font-weight: 400;
-      color: #333;
-    }
-
-    td:nth-child(2) {
-      overflow-wrap: anywhere; 
-    }
-
-    .row-duplicate {
-      background: rgba(255,0,0,0.10);
-    }
-    .input-inline, .select-inline {
-      font-size: 14px;
-      padding: 4px 8px;
-      border: 1px solid #ccc;
-      border-radius: 4px;
+      height: 32px;
       box-sizing: border-box;
-      width: 100%;
-    }
-    .input-inline:focus, .select-inline:focus {
-      outline: none;
-      border-color: #1d4ed8;
+      border-radius:4px;
+      border: 1px solid #e6e6e6;
+      padding: 0 8px;
     }
     .error-msg {
       color: #ff3333;
-      font-size: 12px;
-      margin-top: 2px;
-      margin-bottom: 0;
-    }
-    th:nth-child(1), td:nth-child(1) { width: 20%; }
-    th:nth-child(2), td:nth-child(2) { width: 30%; }
-    th:nth-child(3), td:nth-child(3) { width: 30%; }
-    th:nth-child(4), td:nth-child(4) { width: 20%; }
-    
-    .action-btn-group {
-      display: flex;
-      flex-direction: row;
-      gap: 8px;
-    }
-
-    .action-btn {
-      height: 32px;
-      padding: 0 8px;
-      border-radius: 4px;
-      font-size: 12px;
-      font-weight: 600;
-      box-sizing: border-box;
-      border: none;
-      outline: none;
-      cursor: pointer;
-      transition: background 0.15s, color 0.15s, border 0.15s;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-
-    /* Edit/Save: blue solid */
-    .action-btn.edit-btn, .action-btn.save-btn {
-      background: #1d4ed8;
-      color: #fff;
-      border: none;
-    }
-
-    /* Locate: blue outline */
-    .action-btn.locate-btn {
-      background: #fff;
-      color: #666;
-      border: 1.5px solid #666;
-    }
-
-    /* Delete: red outline */
-    .action-btn.delete-btn {
-      background: #fff;
-      color: #e00;
-      border: 1.5px solid #e00;
+      font-size: 14px;
     }
     .disabled-text {
       color: #b3b3b3 !important;
     }
-    .action-btn-group.hidden {
-      display: none !important;
+    /* Floating Action Button Styles */
+    .fab-container {
+      width: calc(100% - 16px);
+      position: fixed;
+      bottom: 0px;
+      display: flex;
+      flex-direction: row;
+      align-items: stretch;
+      justify-content: space-between;
+      gap: 16px;
+      z-index: 1000;
+      padding: 16px 8px;
+      background: linear-gradient(0deg, #ffffff, transparent);
+      backdrop-filter: blur(0.5px);
+    }
+    
+    .fab-search-container {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      background: #fff;
+      border: 1px solid #e6e6e6;
+      border-radius: 999px;
+      padding: 8px 16px;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+      transition: box-shadow 0.15s, border-color 0.15s;
+    }
+    
+    .fab-search-container:focus-within {
+      border: 2px solid #1d4ed8;
+      box-shadow: 0 4px 20px rgba(29, 78, 216, 0.15);
+    }
+    
+    .fab-search-input {
+      border: none;
+      outline: none;
+      font-size: 14px;
+      width: 100%;
+      padding: 4px 0;
+      background: transparent;
+    }
+    
+    .fab-search-input::placeholder {
+      color: #999;
+    }
+    
+    .fab-export-btn {
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 48px;
+      height: 48px;
+      font-size: 20px;
+      background: #396af2;
+      color: #fff;
+      border: none;
+      border-radius: 999px;
+      cursor: pointer;
+      box-shadow: 0 6px 20px rgba(29, 78, 216, 0.3);
+      transition: all 0.15s;
+    }
+     .fab-export-btn .tooltip {
+      display: none;
+      position: absolute;
+      bottom: 52px;
+      right: 0px;
+      background: #222;
+      color: #fff;
+      font-size: 12px;
+      padding: 2px 8px;
+      border-radius: 4px;
+      white-space: nowrap;
+      z-index: 10;
+      pointer-events: none;
+    }
+    .fab-export-btn:hover .tooltip {
+      display: block;
+    }
+    
+    .fab-export-btn:hover:not(:disabled) {
+      background: #1e40af;
+      box-shadow: 0 8px 24px rgba(29, 78, 216, 0.4);
+    }
+    
+    .fab-export-btn:disabled {
+      background: #e5e7eb;
+      color: #9ca3af;
+      cursor: not-allowed;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      transform: none;
+    }
+    
+    .dropdown-backdrop {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(0, 0, 0, 0.3);
+      z-index: 998;
+      display: none;
+    }
+    
+    .dropdown-menu {
+      position: absolute;
+      bottom: 0;
+      right: 0;
+      width: 382px;
+      background: #fff;
+      border: 1px solid #e6e6e6;
+      border-radius: 8px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.12);
+      z-index: 999;
+      display: none;
+      padding: 8px 0;
+      transform-origin: bottom right;
+    }
+    
+    .dropdown-item {
+      padding: 16px;
+      cursor: pointer;
+      font-size: 14px;
+      color: #333;
+      background: #fff;
+      transition: background 0.15s;
+      border: none;
+      outline: none;
+    }
+    
+    .dropdown-item:hover:not(.disabled) {
+      background: #f5f7fa;
+    }
+    
+    .dropdown-item.disabled {
+      color: #bbb;
+      cursor: not-allowed;
+      background: #fff;
     }
   </style>
 </head>
 <body>
-  <div class="info-bar">
-    <div style="display: flex; align-items: center; gap: 8px; justify-content: flex-start;">
-      <input id="searchKey" class="search-input" type="text" placeholder="Search Key">
-      <div class="filter-dropdown" id="projectFilter">
-        <button id="filterBtn" class="filter-btn">projects: All <span id="filterCountSpan"></span> ▼</button>
-        <div id="filterMenu" class="filter-menu" style="display:none;">
-          <!-- 動態產生專案選項 -->
-        </div>
-      </div>
-      <div class="dropdown">
-        <button id="exportBtn" style="margin-left:auto;" disabled>Export csv ▼</button>
-        <div id="exportDropdown" class="dropdown-menu">
-          <!-- 動態產生專案選項 -->
-        </div>
-      </div>
-    </div>
-    <div id="dupWarningsContainer"></div>
-  </div>
-  <div class="table-container">
-    <div class="scroll-table">
-      <table id="lokaliseTable">
-        <thead>
-          <tr>
-            <th>Project</th>
-            <th>Key</th>
-            <th>Draft String</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          <!-- Data rows will be inserted here -->
-        </tbody>
-      </table>
+  <div class="sticky-bar">
+    <div class="info-bar">
+      <div class="chip-group" id="projectChipGroup"></div>
+      <div id="dupWarningsContainer"></div>
     </div>
   </div>
+  <div class="card-list" id="cardList"></div>
+  
+  <!-- Floating Action Buttons -->
+  <div class="fab-container">
+    <div class="fab-search-container">
+      <input id="searchKey" class="fab-search-input" type="text" placeholder="Search Key">
+    </div>
+    <div style="position:relative;display:inline-block;">
+      <button id="exportBtn" class="fab-export-btn" disabled>💾<span class="tooltip">Export CSV</span></button>
+      <div id="exportDropdown" class="dropdown-menu"></div>
+    </div>
+  </div>
+  
+  <!-- Backdrop for dropdown -->
+  <div id="dropdownBackdrop" class="dropdown-backdrop"></div>
+  
   <script>
 let currentData = [];
 let editingIndex = null;
 let filterProject = "All";
 let searchKey = "";
 let showDupKeys = [];
-let projectList = []; // 新增：由 plugin 主程式傳來
+let projectList = [];
+let languageSettings = {
+  baseLanguage: { code: 'en', name: 'English' },
+  supportedLanguages: [
+    { code: 'ja', name: 'Japanese' },
+    { code: 'en_US', name: 'English (United States)' },
+    { code: 'zh_TW', name: 'Chinese Traditional' },
+    { code: 'zh_CN', name: 'Chinese Simplified' }
+  ]
+};
 
-function getProjectList() {
-  // 改成回傳 plugin 主程式傳來的 projectList
-  return projectList;
+function getProjectList() { 
+  return projectList; 
 }
 
-// 動態產生 filter 與 export 專案選單
-function renderProjectFilterAndExport() {
+// --- chip group 拖拽功能 ---
+function initChipGroupDrag() {
+  const chipGroup = document.getElementById('projectChipGroup');
+  let isDown = false;
+  let startX;
+  let scrollLeft;
+
+  chipGroup.addEventListener('mousedown', (e) => {
+    isDown = true;
+    chipGroup.classList.add('active');
+    startX = e.pageX - chipGroup.offsetLeft;
+    scrollLeft = chipGroup.scrollLeft;
+    chipGroup.style.cursor = 'grabbing';
+    chipGroup.style.userSelect = 'none';
+  });
+
+  chipGroup.addEventListener('mouseleave', () => {
+    isDown = false;
+    chipGroup.classList.remove('active');
+    chipGroup.style.cursor = 'grab';
+    chipGroup.style.userSelect = 'auto';
+  });
+
+  chipGroup.addEventListener('mouseup', () => {
+    isDown = false;
+    chipGroup.classList.remove('active');
+    chipGroup.style.cursor = 'grab';
+    chipGroup.style.userSelect = 'auto';
+  });
+
+  chipGroup.addEventListener('mousemove', (e) => {
+    if (!isDown) return;
+    e.preventDefault();
+    const x = e.pageX - chipGroup.offsetLeft;
+    const walk = (x - startX) * 2; // 調整拖拽速度
+    chipGroup.scrollLeft = scrollLeft - walk;
+  });
+
+  // 設置初始樣式
+  chipGroup.style.cursor = 'grab';
+}
+
+// --- 新增 chip group 渲染 ---
+function renderProjectChipGroup() {
+  const chipGroup = document.getElementById('projectChipGroup');
+  chipGroup.innerHTML = '';
+  // 計算各 project 筆數
   const projects = getProjectList();
-  const filterMenu = document.getElementById('filterMenu');
-  const exportDropdown = document.getElementById('exportDropdown');
-  filterMenu.innerHTML = '';
-  exportDropdown.innerHTML = '';
-
-  // Filter: All
-  const allOpt = document.createElement('div');
-  allOpt.className = 'filter-option';
-  allOpt.setAttribute('data-value', 'All');
-  allOpt.innerHTML = `<input type="radio" name="projectFilter" value="All" checked> All <span class="count-span"></span>`;
-  filterMenu.appendChild(allOpt);
-
-  // Export: Google Sheet
-  const googleOpt = document.createElement('div');
-  googleOpt.className = 'dropdown-item';
-  googleOpt.setAttribute('data-action', 'google-sheet');
-  googleOpt.innerHTML = `Google Sheet <span class="export-count" data-count-for="google-sheet"></span>`;
-  exportDropdown.appendChild(googleOpt);
-
-  // 依 localStorage 專案產生
+  const countMap = {};
+  projects.forEach(proj => countMap[proj] = 0);
+  mergeIdenticalEntries(currentData).forEach(row => {
+    if (countMap.hasOwnProperty(row.projectName)) countMap[row.projectName]++;
+  });
+  // All 筆數
+  const allCount = mergeIdenticalEntries(currentData).length;
+  // 產生 All chip
+  const allChip = document.createElement('div');
+  allChip.className = 'chip' + (filterProject === "All" ? ' selected' : '');
+  allChip.textContent = `All (${allCount})`;
+  allChip.onclick = () => {
+    filterProject = "All";
+    editingIndex = null;
+    showDupKeys = [];
+    renderProjectChipGroup();
+    renderCardList(getFilteredData(), null);
+    updateExportDropdownState();
+  };
+  chipGroup.appendChild(allChip);
+  // 產生有資料的 project chip（依 projectList 順序）
   projects.forEach(proj => {
-    // Filter
-    const filterOpt = document.createElement('div');
-    filterOpt.className = 'filter-option';
-    filterOpt.setAttribute('data-value', proj);
-    filterOpt.innerHTML = `<input type="radio" name="projectFilter" value="${proj}"> ${proj} <span class="count-span"></span>`;
-    filterMenu.appendChild(filterOpt);
-
-    // Export
-    const exportOpt = document.createElement('div');
-    exportOpt.className = 'dropdown-item';
-    exportOpt.setAttribute('data-action', proj);
-    exportOpt.innerHTML = `proj ${proj} <span class="export-count" data-count-for="${proj}"></span>`;
-    exportDropdown.appendChild(exportOpt);
+    if (countMap[proj] > 0) {
+      const chip = document.createElement('div');
+      chip.className = 'chip' + (filterProject === proj ? ' selected' : '');
+      chip.textContent = `${proj} (${countMap[proj]})`;
+      chip.onclick = () => {
+        filterProject = proj;
+        editingIndex = null;
+        showDupKeys = [];
+        renderProjectChipGroup();
+        renderCardList(getFilteredData(), null);
+        updateExportDropdownState();
+      };
+      chipGroup.appendChild(chip);
+    }
   });
 }
 
 function findDuplicateKeyNamesDetail(data) {
-  const count = {};
+  const groups = {};
   data.forEach(row => {
     const key = (row.projectName || "") + "||" + (row.keyName || "");
-    if (!count[key]) count[key] = 0;
-    count[key]++;
+    if (!groups[key]) groups[key] = [];
+    groups[key].push(row);
   });
-  return Object.entries(count)
-    .filter(([k, v]) => v > 1)
-    .map(([k, v]) => {
+  
+  return Object.entries(groups)
+    .filter(([k, rows]) => rows.length > 1)
+    .map(([k, rows]) => {
       const [project, keyName] = k.split("||");
-      return [project, keyName, v];
-    });
+      const uniqueContents = [...new Set(rows.map(r => r.content || ""))];
+      return [project, keyName, rows.length, uniqueContents.length > 1];
+    })
+    .filter(([project, keyName, count, hasConflict]) => hasConflict); // Only return conflicts
+}
+
+function mergeIdenticalEntries(data) {
+  const groups = {};
+  const merged = [];
+  
+  data.forEach(row => {
+    const key = (row.projectName || "") + "||" + (row.keyName || "") + "||" + (row.content || "");
+    if (!groups[key]) {
+      groups[key] = row;
+      merged.push(row);
+    }
+    // Identical entries are automatically skipped
+  });
+  
+  return merged;
 }
 
 function getFilteredData() {
-  let filtered = currentData.filter(row => {
+  let filtered = mergeIdenticalEntries(currentData).filter(row => {
     const projectMatch = (filterProject === "All" || row.projectName === filterProject);
     const searchMatch = (!searchKey || (row.keyName && row.keyName.toLowerCase().includes(searchKey.toLowerCase())));
     return projectMatch && searchMatch;
@@ -415,164 +568,145 @@ function getFilteredData() {
   return filtered;
 }
 
-function renderTable(data, editingIdx = null) {
-  updateExportBtnAndDupWarning(currentData);
-  const tbody = document.querySelector("#lokaliseTable tbody");
-  tbody.innerHTML = "";
+function renderCardList(data, editingIdx = null) {
+  updateExportBtnAndDupWarning(mergeIdenticalEntries(currentData));
+  const cardList = document.getElementById("cardList");
+  cardList.innerHTML = "";
   if (Array.isArray(data) && data.length > 0) {
-    const dupSet = new Set(findDuplicateKeyNamesDetail(currentData).map(([k]) => k));
+    const dupSet = new Set(findDuplicateKeyNamesDetail(mergeIdenticalEntries(currentData)).map(([project, keyName]) => project + "||" + keyName));
     data.forEach((row, idx) => {
-      const tr = document.createElement("tr");
-      if (dupSet.has(row.projectName + "||" + row.keyName)) {
-        tr.className = "row-duplicate";
+      const card = document.createElement("div");
+      card.className = "card" +
+        (dupSet.has(row.projectName + "||" + row.keyName) ? " card-duplicate" : "") +
+        (editingIdx === idx ? "" : "");
+      if (editingIdx !== null && editingIdx !== idx) {
+        card.classList.add("disabled");
       }
-      if (editingIdx === idx) {
-        // 編輯中的 row
-        const projects = getProjectList();
-        tr.innerHTML = `
-          <td>
-            <select class="select-inline" id="edit-project">
-              ${projects.map(p => `<option value="${p}"${row.projectName === p ? " selected" : ""}>${p}</option>`).join("")}
-            </select>
-          </td>
-          <td>
-            <input class="input-inline" id="edit-key" value="${row.keyName || ""}" autocomplete="off">
-            <div class="error-msg" id="edit-key-err" style="display:none"></div>
-          </td>
-          <td>
-            <span style="color:#222;">${row.content || ""}</span>
-          </td>
-          <td>
-            <div class="action-btn-group">
-              <button class="action-btn save-btn" id="save-btn">Save</button>
-            </div>
-          </td>
-        `;
-      } else {
-        // 其他 row
-        const disabledClass = editingIdx !== null ? 'disabled-text' : '';
-        const actionBtnGroupClass = editingIdx !== null ? 'action-btn-group hidden' : 'action-btn-group';
-        tr.innerHTML = `
-          <td class="${disabledClass}">${row.projectName || ""}</td>
-          <td class="${disabledClass}">${row.keyName || ""}</td>
-          <td class="${disabledClass}">${row.content || ""}</td>
-          <td>
-            <div class="${actionBtnGroupClass}">
-              <button class="action-btn edit-btn" data-index="${idx}">Edit</button>
-              <button class="action-btn locate-btn" data-index="${idx}">Locate</button>
-              <button class="action-btn delete-btn" data-index="${idx}">Delete</button>
-            </div>
-          </td>
-        `;
-      }
-      tbody.appendChild(tr);
-    });
-  } else {
-    const tr = document.createElement("tr");
-    tr.innerHTML = `<td colspan="4" style="color:#888;">No data found.</td>`;
-    tbody.appendChild(tr);
-  }
+      card.dataset.index = idx;
 
-  // 綁定 edit/locate/delete
-  if (editingIdx === null) {
-    document.querySelectorAll('.edit-btn').forEach(btn => {
-      btn.addEventListener('click', function() {
-        const idx = parseInt(this.getAttribute('data-index'));
-        parent.postMessage({
-          pluginMessage: {
-            type: "locate-row",
-            uuid: data[idx].uuid
+      // 預設模式
+      if (editingIdx !== idx) {
+        card.innerHTML = `
+          <div class="card-header">
+            <span class="project-label">${row.projectName || ""}</span>
+            <div class="card-actions">
+              <button class="card-action-btn locate-btn" title="Locate">
+                📍<span class="tooltip">Locate</span>
+              </button>
+              <button class="card-action-btn edit-btn" title="Edit">
+                ✏️<span class="tooltip">Edit</span>
+              </button>
+              <button class="card-action-btn delete-btn" title="Delete">
+                🗑️<span class="tooltip">Delete</span>
+              </button>
+            </div>
+          </div>
+          <div class="card-key">${row.keyName || ""}</div>
+          <div class="card-draft">${row.content || ""}</div>
+        `;
+        // 綁定 action btns
+        card.querySelector('.locate-btn').onclick = (e) => {
+          e.stopPropagation();
+          parent.postMessage({
+            pluginMessage: { type: "locate-row", uuid: row.uuid }
+          }, "*");
+        };
+        card.querySelector('.edit-btn').onclick = (e) => {
+          e.stopPropagation();
+          editingIndex = idx;
+          renderCardList(getFilteredData(), editingIndex);
+        };
+        card.querySelector('.delete-btn').onclick = (e) => {
+          e.stopPropagation();
+          if (confirm('Are you sure you want to delete this row?')) {
+            parent.postMessage({
+              pluginMessage: { type: "delete-row", uuid: row.uuid }
+            }, "*");
           }
-        }, "*");
-        editingIndex = idx;
-        renderTable(getFilteredData(), editingIndex);
-      });
-    });
-    document.querySelectorAll('.locate-btn').forEach(btn => {
-      btn.addEventListener('click', function() {
-        const idx = parseInt(this.getAttribute('data-index'));
-        parent.postMessage({
-          pluginMessage: {
-            type: "locate-row",
-            uuid: data[idx].uuid
+        };
+      } else {
+        // 編輯模式
+        const projects = getProjectList();
+        card.innerHTML = `
+          <div class="card-edit-row">
+            <div class="card-edit-header">
+              <div class="edit-row-top">
+                <select class="select-inline" id="edit-project">
+                  ${projects.map(p => `<option value="${p}"${row.projectName === p ? " selected" : ""}>${p}</option>`).join("")}
+                </select>
+                <button class="save-btn" id="save-btn">Save</button>
+              </div>
+              <input class="input-inline" id="edit-key" value="${row.keyName || ""}" autocomplete="off">
+              <div class="error-msg" id="edit-key-err" style="display:none"></div>
+            </div>
+            <div class="card-draft">${row.content || ""}</div>
+          </div>
+        `;
+        // 綁定儲存
+        const saveBtn = card.querySelector('#save-btn');
+        const keyInput = card.querySelector('#edit-key');
+        const projectSelect = card.querySelector('#edit-project');
+        const keyErr = card.querySelector('#edit-key-err');
+        function validateEdit() {
+          let valid = true;
+          let keyVal = keyInput.value.replace(/[^A-Za-z0-9\-\_\.]/g, '');
+          keyInput.value = keyVal;
+          if (!keyVal) {
+            keyErr.textContent = "Key cannot be empty";
+            keyErr.style.display = "block";
+            valid = false;
+          } else if (!/^[A-Za-z0-9\-\_\.]+$/.test(keyVal)) {
+            keyErr.textContent = "Only uppercase and lowercase letters, numbers, -, _, . are allowed.";
+            keyErr.style.display = "block";
+            valid = false;
+          } else {
+            keyErr.style.display = "none";
           }
-        }, "*");
-      });
-    });
-    document.querySelectorAll('.delete-btn').forEach(btn => {
-      btn.addEventListener('click', function() {
-        const idx = parseInt(this.getAttribute('data-index'));
-        if (confirm('Are you sure you want to delete this row?')) {
+          saveBtn.disabled = !valid;
+          return valid;
+        }
+        keyInput.addEventListener('input', validateEdit);
+        saveBtn.onclick = function() {
+          if (!validateEdit()) return;
+          const newProject = projectSelect.value;
+          const newKey = keyInput.value;
           parent.postMessage({
             pluginMessage: {
-              type: "delete-row",
-              uuid: data[idx].uuid
+              type: "update-row",
+              uuid: row.uuid,
+              projectName: newProject,
+              keyName: newKey
             }
           }, "*");
-        }
-      });
+        };
+        validateEdit();
+      }
+      cardList.appendChild(card);
     });
   } else {
-    // 編輯狀態下，綁定儲存
-    const saveBtn = document.getElementById('save-btn');
-    const keyInput = document.getElementById('edit-key');
-    const projectSelect = document.getElementById('edit-project');
-    const keyErr = document.getElementById('edit-key-err');
-
-    function validateEdit() {
-      let valid = true;
-      let keyVal = keyInput.value.toLowerCase().replace(/[^a-z0-9\-\_\.]/g, '');
-      keyInput.value = keyVal;
-      if (!keyVal) {
-        keyErr.textContent = "key 不得為空";
-        keyErr.style.display = "block";
-        valid = false;
-      } else if (!/^[a-z0-9\-\_\.]+$/.test(keyVal)) {
-        keyErr.textContent = "只允許小寫英文、數字、-、_、.";
-        keyErr.style.display = "block";
-        valid = false;
-      } else {
-        keyErr.style.display = "none";
-      }
-      saveBtn.disabled = !valid;
-      return valid;
-    }
-
-    keyInput.addEventListener('input', validateEdit);
-
-    saveBtn.onclick = function() {
-      if (!validateEdit()) return;
-      const newProject = projectSelect.value;
-      const newKey = keyInput.value;
-      parent.postMessage({
-        pluginMessage: {
-          type: "update-row",
-          uuid: data[editingIdx].uuid,
-          projectName: newProject,
-          keyName: newKey
-        }
-      }, "*");
-    };
-
-    validateEdit();
+    const emptyDiv = document.createElement("div");
+    emptyDiv.style.color = "#888";
+    emptyDiv.style.textAlign = "center";
+    emptyDiv.style.margin = "32px 0";
+    emptyDiv.textContent = "No data found.";
+    cardList.appendChild(emptyDiv);
   }
 }
 
 function updateExportBtnAndDupWarning(data) {
   const exportBtn = document.getElementById("exportBtn");
   const dupWarningsContainer = document.getElementById("dupWarningsContainer");
-  updateFilterCounts();
 
-  // 詳列所有重複 key（以 project+keyName 為單位）
+  // 詳列所有重複 key（以 project+keyName 為單位，但只顯示 content 衝突的）
   const dupList = findDuplicateKeyNamesDetail(data);
   dupWarningsContainer.innerHTML = "";
   if (dupList.length > 0) {
     exportBtn.disabled = true;
-    dupList.forEach(([project, key, count]) => {
+    dupList.forEach(([project, key, count, hasConflict]) => {
       const keyId = project + "||" + key;
       const warnDiv = document.createElement("div");
       warnDiv.className = "dup-warning-list";
-      warnDiv.innerHTML = `<span>${project} - ${key} 有重複 ${count} 筆資料</span><button class="action-btn dupCheck-btn" data-key="${keyId}" style="font-size:14px; padding:4px 12px; border-radius:4px; border:none; background:#ffffff; color:#333; cursor:pointer; margin-left:12px;">${showDupKeys.length === 1 && showDupKeys[0] === keyId ? "show all" : "check"}</button>`;
+      warnDiv.innerHTML = `<span>You have conflicting content for ${key} in ${project}.</span><button class="action-btn dupCheck-btn" data-key="${keyId}" style="font-size:14px; padding:4px 8px; border-radius:4px; border:none; background:#ffffff; color:#333; cursor:pointer; white-space:nowrap; min-width:fit-content;">${showDupKeys.length === 1 && showDupKeys[0] === keyId ? "show all" : "check"}</button>`;
       dupWarningsContainer.appendChild(warnDiv);
     });
     dupWarningsContainer.querySelectorAll('.dupCheck-btn').forEach(btn => {
@@ -583,7 +717,7 @@ function updateExportBtnAndDupWarning(data) {
         } else {
           showDupKeys = [keyId];
         }
-        renderTable(getFilteredData(), null);
+        renderCardList(getFilteredData(), null);
       };
     });
   } else {
@@ -591,32 +725,21 @@ function updateExportBtnAndDupWarning(data) {
   }
 }
 
-function updateFilterCounts() {
-  const projects = getProjectList();
-  const allCount = currentData.length;
-  document.querySelector('.filter-option[data-value="All"] .count-span').textContent = `(${allCount})`;
-  projects.forEach(proj => {
-    const count = currentData.filter(row => row.projectName === proj).length;
-    const el = document.querySelector(`.filter-option[data-value="${proj}"] .count-span`);
-    if (el) el.textContent = `(${count})`;
-  });
-  // 更新 filterBtn 上的數字
-  let showCount = allCount;
-  if (filterProject !== "All") showCount = currentData.filter(row => row.projectName === filterProject).length;
-  document.getElementById('filterCountSpan').textContent = `(${showCount})`;
-}
-
 function updateExportDropdownState() {
   const projects = getProjectList();
   const countMap = {};
   projects.forEach(proj => countMap[proj] = 0);
-  currentData.forEach(row => {
+  mergeIdenticalEntries(currentData).forEach(row => {
     if (countMap.hasOwnProperty(row.projectName)) {
       countMap[row.projectName]++;
     }
   });
-  // Google Sheet
-  document.querySelector('.export-count[data-count-for="google-sheet"]').textContent = `(${currentData.length})`;
+  // Download Bundle
+  const totalProjects = projects.filter(proj => countMap[proj] > 0).length;
+  const bundleCountElement = document.querySelector('.export-count[data-count-for="download-bundle"]');
+  if (bundleCountElement) {
+    bundleCountElement.textContent = `(${totalProjects} projects)`;
+  }
   projects.forEach(proj => {
     const item = document.querySelector(`.dropdown-item[data-action="${proj}"]`);
     const countSpan = document.querySelector(`.export-count[data-count-for="${proj}"]`);
@@ -639,6 +762,15 @@ function updateExportDropdownState() {
 }
 
 // 匯出 CSV
+function escapeCSV(value) {
+  if (value == null) return '';
+  const str = String(value);
+  if (str.includes(',') || str.includes('"') || str.includes('\n') || str.includes('\r')) {
+    return '"' + str.replace(/"/g, '""') + '"';
+  }
+  return str;
+}
+
 function exportCSVNoHeader(rows, filename) {
   const csv = rows.join("\n");
   const blob = new Blob([csv], { type: "text/csv" });
@@ -654,32 +786,92 @@ function exportCSVNoHeader(rows, filename) {
   }, 0);
 }
 
+function generateCSVHeader() {
+  const headers = ["Key", languageSettings.baseLanguage.code];
+  languageSettings.supportedLanguages.forEach(lang => {
+    headers.push(lang.code);
+  });
+  return headers.map(escapeCSV).join(",");
+}
+
+function generateCSVRow(row) {
+  const rowData = [row.keyName, row.content];
+  // Add empty values for each supported language
+  languageSettings.supportedLanguages.forEach(() => {
+    rowData.push("");
+  });
+  return rowData.map(escapeCSV).join(",");
+}
+
 function handleExportAction(action) {
   let rows = [];
   let filename = "";
   const today = (new Date()).toISOString().slice(0,10).replace(/-/g, '');
-  if (action === "google-sheet") {
-    rows = currentData.map(row =>
-      [row.projectName, row.keyName, row.content].map(escapeCSV).join(",")
-    );
-    filename = `proj-google-sheet-${today}.csv`;
+  
+  if (action === "download-bundle") {
+    // Download all projects as separate CSV files in a ZIP
+    downloadProjectBundle(today);
+    return;
   } else {
     const proj = action;
-    let projRows = currentData.filter(row => row.projectName === proj);
-    rows = projRows.map(row =>
-      [row.keyName, row.content].map(escapeCSV).join(",")
-    );
+    let projRows = mergeIdenticalEntries(currentData).filter(row => row.projectName === proj);
+    // Add header for individual project export
+    const header = generateCSVHeader();
+    rows = [header, ...projRows.map(row => generateCSVRow(row))];
     filename = `proj-${proj}-${today}.csv`;
   }
   exportCSVNoHeader(rows, filename);
 }
 
-function escapeCSV(val) {
-  if (typeof val !== "string") return "";
-  if (val.includes(",") || val.includes('"') || val.includes("\n")) {
-    return `"${val.replace(/"/g, '""')}"`;
+// New function to download all projects as a bundle
+async function downloadProjectBundle(today) {
+  const projects = getProjectList();
+  const mergedData = mergeIdenticalEntries(currentData);
+  const projectsWithData = projects.filter(proj => 
+    mergedData.some(row => row.projectName === proj)
+  );
+  
+  if (projectsWithData.length === 0) return;
+  
+  const zip = new JSZip();
+  
+  // Add each project as a CSV file to the ZIP
+  projectsWithData.forEach(proj => {
+    const projRows = mergedData.filter(row => row.projectName === proj);
+    const header = generateCSVHeader();
+    const csvContent = [header, ...projRows.map(row => generateCSVRow(row))].join("\n");
+    
+    zip.file(`proj-${proj}-${today}.csv`, csvContent);
+  });
+  
+  // Generate and download the ZIP file
+  try {
+    const content = await zip.generateAsync({type: "blob"});
+    const url = URL.createObjectURL(content);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `lokalise-projects-bundle-${today}.zip`;
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(() => {
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }, 0);
+  } catch (error) {
+    console.error("Error creating ZIP file:", error);
+    // Fallback to individual downloads with user confirmation
+    if (confirm(`Failed to create ZIP bundle. Download ${projectsWithData.length} files individually instead?`)) {
+      projectsWithData.forEach((proj, index) => {
+        setTimeout(() => {
+          const projRows = mergedData.filter(row => row.projectName === proj);
+          const header = generateCSVHeader();
+          const rows = [header, ...projRows.map(row => generateCSVRow(row))];
+          const filename = `proj-${proj}-${today}.csv`;
+          exportCSVNoHeader(rows, filename);
+        }, index * 1000); // 1 second delay between downloads
+      });
+    }
   }
-  return val;
 }
 
 // 搜尋 key
@@ -687,49 +879,37 @@ document.getElementById('searchKey').addEventListener('input', function(e) {
   searchKey = this.value;
   editingIndex = null;
   showDupKeys = [];
-  renderTable(getFilteredData(), null);
+  renderCardList(getFilteredData(), null);
 });
-
-// Filter dropdown
-const filterBtn = document.getElementById('filterBtn');
-const filterMenu = document.getElementById('filterMenu');
-filterBtn.onclick = function(e) {
-  filterMenu.style.display = filterMenu.style.display === "block" ? "none" : "block";
-  e.stopPropagation();
-};
-document.addEventListener('click', function(e) {
-  filterMenu.style.display = "none";
-});
-function bindFilterMenuEvents() {
-  filterMenu.querySelectorAll('.filter-option').forEach(opt => {
-    opt.addEventListener('click', function(e) {
-      const val = this.getAttribute('data-value');
-      filterProject = val;
-      filterBtn.innerHTML = (val === "All" ? "projects: All" : `project: ${val}`) + `<span id="filterCountSpan"></span> ▼`;
-      filterMenu.querySelectorAll('input[type="radio"]').forEach(radio => {
-        radio.checked = (radio.value === val);
-      });
-      filterMenu.style.display = "none";
-      editingIndex = null;
-      showDupKeys = [];
-      renderTable(getFilteredData(), null);
-      updateExportDropdownState();
-      e.stopPropagation();
-    });
-  });
-}
 
 // Export dropdown
 const exportBtn = document.getElementById("exportBtn");
 const exportDropdown = document.getElementById("exportDropdown");
+const dropdownBackdrop = document.getElementById("dropdownBackdrop");
+
 exportBtn.onclick = function(e) {
   if (exportBtn.disabled) return;
-  exportDropdown.style.display = exportDropdown.style.display === "block" ? "none" : "block";
+  const isOpen = exportDropdown.style.display === "block";
+  if (isOpen) {
+    exportDropdown.style.display = "none";
+    dropdownBackdrop.style.display = "none";
+  } else {
+    exportDropdown.style.display = "block";
+    dropdownBackdrop.style.display = "block";
+  }
   e.stopPropagation();
 };
+
+dropdownBackdrop.onclick = function() {
+  exportDropdown.style.display = "none";
+  dropdownBackdrop.style.display = "none";
+};
+
 document.addEventListener('click', function(e) {
   exportDropdown.style.display = "none";
+  dropdownBackdrop.style.display = "none";
 });
+
 function bindExportDropdownEvents() {
   exportDropdown.querySelectorAll('.dropdown-item').forEach(opt => {
     opt.onclick = function() {
@@ -737,8 +917,34 @@ function bindExportDropdownEvents() {
       const action = this.getAttribute('data-action');
       handleExportAction(action);
       exportDropdown.style.display = "none";
+      dropdownBackdrop.style.display = "none";
     };
   });
+}
+
+function renderExportDropdown() {
+  const exportDropdown = document.getElementById("exportDropdown");
+  const projects = getProjectList();
+  const projectsWithData = projects.filter(proj => 
+    currentData.some(row => row.projectName === proj)
+  );
+  
+  let html = `
+    <div class="dropdown-item" data-action="download-bundle" tabindex="0">
+      Download Bundle <span class="export-count" data-count-for="download-bundle">(${projectsWithData.length} projects)</span>
+    </div>
+  `;
+  projects.forEach(proj => {
+    const count = currentData.filter(row => row.projectName === proj).length;
+    if (count > 0) {
+      html += `
+        <div class="dropdown-item" data-action="${proj}" tabindex="0">
+          ${proj} <span class="export-count" data-count-for="${proj}">(${count})</span>
+        </div>
+      `;
+    }
+  });
+  exportDropdown.innerHTML = html;
 }
 
 // 處理 Figma 傳來的資料
@@ -757,31 +963,36 @@ window.onmessage = (event) => {
     updateAllUI();
   }
   if (pluginMessage && pluginMessage.type === "project-list") {
-    // 新增：收到 project-list
     projectList = Array.isArray(pluginMessage.projects) ? pluginMessage.projects : [];
     updateAllUI();
+  }
+  if (pluginMessage && pluginMessage.type === "language-settings") {
+    if (pluginMessage.languageSettings) {
+      languageSettings = pluginMessage.languageSettings;
+      console.log("[get-list] Updated language settings:", languageSettings);
+    }
   }
 };
 
 function updateAllUI() {
-  renderProjectFilterAndExport();
-  bindFilterMenuEvents();
+  renderProjectChipGroup();
+  initChipGroupDrag();
+  renderExportDropdown();
   bindExportDropdownEvents();
-  renderTable(getFilteredData(), null);
-  updateFilterCounts();
+  renderCardList(getFilteredData(), editingIndex);
   updateExportDropdownState();
 }
 
-// 初始化
 window.onload = () => {
-  renderProjectFilterAndExport();
-  bindFilterMenuEvents();
+  renderProjectChipGroup();
+  initChipGroupDrag();
+  renderExportDropdown();
   bindExportDropdownEvents();
-  renderTable([], null);
-  updateFilterCounts();
+  renderCardList([], null);
   updateExportDropdownState();
   parent.postMessage({ pluginMessage: { type: 'get-lokalise-list' } }, '*');
-  parent.postMessage({ pluginMessage: { type: 'get-projects' } }, '*'); // 新增：請求專案列表
+  parent.postMessage({ pluginMessage: { type: 'get-projects' } }, '*');
+  parent.postMessage({ pluginMessage: { type: 'get-language-settings' } }, '*');
 };
   </script>
 </body>

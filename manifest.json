@@ -4,9 +4,9 @@
   "api": "1.0.0",
   "main": "code.js",
   "menu": [
-    { "name": "✍️ Annotate lokalise key", "command": "annotate-lokalise" },
-    { "name": "📋 Get lokalise key annotations", "command": "get-lokalise-list" },
-    { "name": "🔄 Re-align lokalise key annotations", "command": "realign" },
+    { "name": "✍️ Annotate Keys", "command": "annotate-lokalise" },
+    { "name": "📋 Manage Keys", "command": "get-lokalise-list" },
+    { "name": "🔄 Re-align Annotations", "command": "realign" },
     { "name": "⚙️ Lokalise Project Setting", "command": "project-setting" }
   ],
   "capabilities": [],
@@ -22,7 +22,7 @@
   },
   "networkAccess": {
     "allowedDomains": [
-      "none"
+      "https://cdnjs.cloudflare.com"
     ]
   }
 }

@@ -2,8 +2,8 @@
   body {
     font-family: 'Segoe UI', 'Helvetica Neue', Arial, 'Liberation Sans', 'Nimbus Sans', 'sans-serif';
     margin: 0;
-    padding: 16px;
-    background: #fff;
+    padding: 12px;
+    background: #fafafa;
   }
   h4 {
     margin: 0 0 8px 0;
@@ -61,6 +61,7 @@
   }
   .full-width {
     width: 100%;
+    height: 40px;
     box-sizing: border-box;
     font-family: inherit;
     font-size: 15px;
@@ -75,10 +76,8 @@
   }
   .input-desc {
     font-size: 13px;
-    color: #888;
-    margin-top: 4px;
-    margin-bottom: 0;
-    user-select: none;
+    color: #777;
+    margin: 4px;
   }
 
   
@@ -89,13 +88,13 @@
     bottom: 0;
     z-index: 100;
     background: #fff;
-    padding: 16px 0;
+    padding: 12px 0;
     border-top: 1px solid #e6e6e6;
   }
   .footer-btn {
     display: block;
     margin: 0 auto;
-    width: calc(100% - 32px);
+    width: calc(100% - 24px);
     max-width: 480px;
     font-size: 16px;
     font-weight: 600;
@@ -118,24 +117,23 @@
     font-size: 13px;
   }
   #preview {
-    background: #fafafa;
-    border: 1px solid #e6e6e6;
+    background: #fff;
+    border: 1px solid #efefef;
     border-radius: 4px;
     min-height: 40px;
-    max-height: 160px;
+    max-height: 120px;
     padding: 8px;
     margin-bottom: 16px;
     font-size: 15px;
     color: #333;
     position: relative;
-    overflow: hidden;
   }
   #preview h5 {
     position: absolute;
     margin: 0 0 8px 0;
     font-size: 14px;
     font-weight: 500;
-    color: #999;
+    color: #777;
     font-family: inherit;
   }
   #previewContent {
@@ -144,7 +142,7 @@
     display: block;
     margin-top: 24px;
     margin-bottom: 0;
-    max-height: 120px;
+    max-height: 100px;
     word-break: break-word;
     overflow-y: auto;
   }
@@ -165,8 +163,8 @@
 </div>
 <div class="row">
   <h4>Name Your Key</h4>
-  <input id="customInput" class="full-width" type="text" pattern="[A-Za-z0-9\-\_\.]*" title="只能輸入小寫英文、數字、-、_、.">
-  <div class="input-desc"> You can only use lowercase letters, numbers, -, _, and . for key names.</div>
+  <input id="customInput" class="full-width" type="text" pattern="[A-Za-z0-9\-\_\.]*" title="只能輸入大小寫英文、數字、-、_、.">
+  <div class="input-desc"> You can only use uppercase and lowercase letters, numbers, -, _, and . for key names.</div>
   <div id="errorMsg">Please enter a valid lokalise key name</div>
 </div>
 <div class="row">
@@ -207,6 +205,7 @@
 </div>
 <script>
 let projectList = [];
+let currentAnnotationInfo = null; // 儲存當前標注資訊
 
 // 從 plugin 主程式取得專案資料
 function requestProjectList() {
@@ -278,7 +277,7 @@ const previewContent = document.getElementById('previewContent');
 
 function validateInput() {
   const value = input.value;
-  const valid = /^[a-z0-9\-\_\.]+$/.test(value);
+  const valid = /^[A-Za-z0-9\-\_\.]+$/.test(value);
   const projects = getProjectList();
   const project = getSelectedProject();
   console.log('[annotate-ui] validateInput', { value, valid, projects, project });
@@ -297,9 +296,26 @@ function validateInput() {
 }
 
 input.addEventListener('input', function(e) {
-  this.value = this.value.toLowerCase().replace(/[^a-z0-9\-\_\.]/g, '');
+  this.value = this.value.replace(/[^A-Za-z0-9\-\_\.]/g, '');
   console.log('[annotate-ui] input changed', this.value);
   validateInput();
+});
+
+// Add keyboard shortcut for create/update action
+input.addEventListener('keydown', function(e) {
+  // Check for Cmd+Enter (macOS) or Ctrl+Enter (Windows/Linux)
+  if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
+    console.log('[annotate-ui] keyboard shortcut triggered - Cmd/Ctrl+Enter');
+    e.preventDefault(); // Prevent default behavior
+    
+    // Only trigger if button is enabled
+    if (!createBtn.disabled) {
+      console.log('[annotate-ui] executing create/update action via keyboard shortcut');
+      createBtn.click();
+    } else {
+      console.log('[annotate-ui] keyboard shortcut ignored - button is disabled');
+    }
+  }
 });
 
 function updateRadioStyles() {
@@ -354,10 +370,78 @@ window.onmessage = (event) => {
   const { pluginMessage } = event.data;
   console.log('[annotate-ui] window.onmessage', pluginMessage);
   if (pluginMessage && pluginMessage.type === 'content-result') {
+    
     if (pluginMessage.content) {
       previewContent.textContent = pluginMessage.content;
+      
+      // 檢查是否已標注
+      if (pluginMessage.isAnnotated) {
+        currentAnnotationInfo = {
+          uuid: pluginMessage.uuid,
+          keyName: pluginMessage.keyName,
+          projectName: pluginMessage.projectName
+        };
+                
+        // 填入已有的 key 值
+        input.value = pluginMessage.keyName || '';
+        
+        // 選中對應的 project
+        if (pluginMessage.projectName) {
+          selectProject(pluginMessage.projectName);
+        }
+        
+        // 改變按鈕文案
+        createBtn.textContent = 'Update';
+        
+        validateInput();
+      } else {
+        // Reset currentAnnotationInfo
+        currentAnnotationInfo = null;
+        
+        // Empty input
+        input.value = '';
+        
+        // Change button text
+        createBtn.textContent = 'Create';
+        
+        // 重新選中第一個 project（如果有的話）
+        const firstRadio = document.querySelector('input[name="project"]');
+        if (firstRadio) {
+          firstRadio.checked = true;
+          updateRadioStyles();
+        }
+        
+        // 重置定位選項為 Auto
+        const autoPositionRadio = document.querySelector('input[name="position"][value="auto"]');
+        if (autoPositionRadio) {
+          autoPositionRadio.checked = true;
+          updatePositionRadioStyles();
+        }
+        
+        validateInput();
+      }
     } else {
       previewContent.textContent = "請選取要新增 lokalise key 的字串";
+      
+      // 完全重置狀態
+      currentAnnotationInfo = null;
+      input.value = '';
+      createBtn.textContent = 'Create';
+      
+      // 重置所有選項
+      const firstRadio = document.querySelector('input[name="project"]');
+      if (firstRadio) {
+        firstRadio.checked = true;
+        updateRadioStyles();
+      }
+      
+      const autoPositionRadio = document.querySelector('input[name="position"][value="auto"]');
+      if (autoPositionRadio) {
+        autoPositionRadio.checked = true;
+        updatePositionRadioStyles();
+      }
+      
+      validateInput();
     }
   }
   if (pluginMessage && pluginMessage.type === 'project-list') {
@@ -367,20 +451,25 @@ window.onmessage = (event) => {
   }
 };
 
-window.onload = () => {
-  console.log('[annotate-ui] window.onload');
-  requestProjectList();
-  parent.postMessage({ pluginMessage: { type: 'get-content', key: '', project: '' } }, '*');
-  parent.postMessage({ pluginMessage: { type: 'resize', width: document.body.scrollWidth, height: document.body.scrollHeight } }, '*');
-  input.focus();
-};
+// 新增選中特定 project 的函數
+function selectProject(projectName) {
+  const projectRadios = document.getElementsByName('project');
+  for (let radio of projectRadios) {
+    if (radio.value === projectName) {
+      radio.checked = true;
+      radio.dispatchEvent(new Event('change', { bubbles: true }));
+      break;
+    }
+  }
+}
 
 createBtn.onclick = () => {
   const project = getSelectedProject();
   const key = input.value;
-  const valid = /^[a-z0-9\-\_\.]+$/.test(key);
+  const valid = /^[A-Za-z0-9\-\_\.]+$/.test(key);
   const dir = getSelectedPosition();
-  console.log('[annotate-ui] createBtn.onclick', { project, key, valid, dir });
+  
+  console.log('[annotate-ui] createBtn.onclick', { project, key, valid, dir, currentAnnotationInfo });
 
   if (!key || !valid) {
     errorMsg.style.display = 'block';
@@ -389,8 +478,32 @@ createBtn.onclick = () => {
     errorMsg.style.display = 'none';
   }
 
-  parent.postMessage({ pluginMessage: { type: 'create-shapes', project, key, direction: dir } }, '*');
-  console.log('[annotate-ui] sent create-shapes', { project, key, direction: dir });
+  // 根據是否為更新模式發送不同的訊息
+  if (currentAnnotationInfo) {
+    // 更新模式
+    parent.postMessage({ 
+      pluginMessage: { 
+        type: 'update-annotation', 
+        uuid: currentAnnotationInfo.uuid,
+        project, 
+        key, 
+        direction: dir 
+      } 
+    }, '*');
+    console.log('[annotate-ui] sent update-annotation', { uuid: currentAnnotationInfo.uuid, project, key, direction: dir });
+  } else {
+    // 創建模式
+    parent.postMessage({ 
+      pluginMessage: { 
+        type: 'create-shapes', 
+        project, 
+        key, 
+        direction: dir 
+      } 
+    }, '*');
+    console.log('[annotate-ui] sent create-shapes', { project, key, direction: dir });
+  }
+  
   input.value = "";
   validateInput();
   input.focus();
