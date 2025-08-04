@@ -10,9 +10,9 @@ const UIManager = {
     if (command === "annotate-lokalise") {
       figma.showUI(__uiFiles__.main, { width: 400, height: 600 });
     } else if (command === "get-lokalise-list") {
-      figma.showUI(__uiFiles__.secondary, { width: 400, height: 800 });
+      figma.showUI(__uiFiles__.secondary, { width: 400, height: 600 });
     } else if (command === "project-setting") {
-      figma.showUI(__uiFiles__.projectSetting, { width: 400, height: 280 });
+      figma.showUI(__uiFiles__.projectSetting, { width: 400, height: 600 });
     }
   }
 };
@@ -229,7 +229,7 @@ const AnnotationCreator = {
     await this.addToMainGroup(wrapper);
     
     figma.currentPage.selection = [textNode, wrapper];
-    figma.notify('Added annotation successfully! You can add more annotations by selecting text nodes and running the plugin again.');
+    figma.notify('✅ Annotation added! Select more text to add again.');
   },
 
   createProjectFrame(project: string): FrameNode {
