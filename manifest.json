@@ -6,8 +6,7 @@
   "menu": [
     { "name": "✍️ Annotate Keys", "command": "annotate-lokalise" },
     { "name": "📋 Manage Keys", "command": "get-lokalise-list" },
-    { "name": "🔄 Re-align Annotations", "command": "realign" },
-    { "name": "⚙️ Lokalise Project Setting", "command": "project-setting" }
+    { "name": "🔄 Re-align Annotations", "command": "realign" }
   ],
   "capabilities": [],
   "enableProposedApi": false,
@@ -17,8 +16,7 @@
   ],
   "ui": {
     "main": "annotate-ui.html",
-    "secondary": "get-list.html",
-    "projectSetting": "project-settings.html"
+    "secondary": "get-list.html"
   },
   "networkAccess": {
     "allowedDomains": [

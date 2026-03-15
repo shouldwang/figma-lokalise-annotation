@@ -116,16 +116,50 @@
       justify-content: space-between;
       gap: 8px;
     }
+    .label-group {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
     .project-label {
       background: #1d4ed812;
-      border-radius: 1px;
+      border: 1px solid #1d4ed833;
+      border-radius: 999px;
       font-family: 'DM Mono', 'Menlo', 'Consolas', monospace;
       font-size: 12px;
-      font-weight: 500;
-      color: #333333;
-      padding: 6px;
-      display: inline-block;
+      font-weight: 600;
+      color: #1e3a8a;
+      padding: 4px 10px;
+      display: inline-flex;
+      align-items: center;
       line-height: 1;
+      text-transform: uppercase;
+      letter-spacing: 0.02em;
+    }
+    .exist-label {
+      background: #14532d12;
+      border: 1px solid #16a34a33;
+      border-radius: 999px;
+      font-family: 'DM Mono', 'Menlo', 'Consolas', monospace;
+      font-size: 11px;
+      font-weight: 600;
+      color: #166534;
+      padding: 4px 8px;
+      line-height: 1;
+      text-transform: uppercase;
+      letter-spacing: 0.02em;
+    }
+    .count-label {
+      background: #33415512;
+      border: 1px solid #33415533;
+      border-radius: 999px;
+      font-family: 'DM Mono', 'Menlo', 'Consolas', monospace;
+      font-size: 11px;
+      font-weight: 600;
+      color: #334155;
+      padding: 4px 8px;
+      line-height: 1;
+      letter-spacing: 0.02em;
     }
     .card-actions {
       display: flex;
@@ -419,13 +453,14 @@ let editingIndex = null;
 let filterProject = "All";
 let searchKey = "";
 let showDupKeys = [];
+let locateCycleCursor = {};
 let projectList = [];
 let languageSettings = {
   baseLanguage: { code: 'en', name: 'English' },
   supportedLanguages: [
     { code: 'ja', name: 'Japanese' },
-    { code: 'en_US', name: 'English (United States)' },
     { code: 'zh_TW', name: 'Chinese Traditional' },
+    { code: 'en_US', name: 'English (United States)' },
     { code: 'zh_CN', name: 'Chinese Simplified' }
   ]
 };
@@ -555,6 +590,37 @@ function mergeIdenticalEntries(data) {
   return merged;
 }
 
+function countSameKeyEntries(data) {
+  const countMap = {};
+  data.forEach((row) => {
+    const key = (row.projectName || "") + "||" + (row.keyName || "");
+    countMap[key] = (countMap[key] || 0) + 1;
+  });
+  return countMap;
+}
+
+function getLocateGroupKey(row) {
+  return (row.projectName || "") + "||" + (row.keyName || "");
+}
+
+function getNextLocateUuid(row) {
+  const groupKey = getLocateGroupKey(row);
+  const uuids = currentData
+    .filter((item) => getLocateGroupKey(item) === groupKey && item.uuid)
+    .map((item) => item.uuid);
+  if (uuids.length === 0) return row.uuid;
+
+  let cursor = locateCycleCursor[groupKey];
+  if (typeof cursor !== "number" || cursor < 0 || cursor >= uuids.length) {
+    const initialIndex = uuids.indexOf(row.uuid);
+    cursor = initialIndex >= 0 ? initialIndex : 0;
+  } else {
+    cursor = (cursor + 1) % uuids.length;
+  }
+  locateCycleCursor[groupKey] = cursor;
+  return uuids[cursor];
+}
+
 function getFilteredData() {
   let filtered = mergeIdenticalEntries(currentData).filter(row => {
     const projectMatch = (filterProject === "All" || row.projectName === filterProject);
@@ -574,7 +640,10 @@ function renderCardList(data, editingIdx = null) {
   cardList.innerHTML = "";
   if (Array.isArray(data) && data.length > 0) {
     const dupSet = new Set(findDuplicateKeyNamesDetail(mergeIdenticalEntries(currentData)).map(([project, keyName]) => project + "||" + keyName));
+    const sameKeyCountMap = countSameKeyEntries(currentData);
     data.forEach((row, idx) => {
+      const groupKey = (row.projectName || "") + "||" + (row.keyName || "");
+      const sameKeyCount = sameKeyCountMap[groupKey] || 1;
       const card = document.createElement("div");
       card.className = "card" +
         (dupSet.has(row.projectName + "||" + row.keyName) ? " card-duplicate" : "") +
@@ -588,7 +657,11 @@ function renderCardList(data, editingIdx = null) {
       if (editingIdx !== idx) {
         card.innerHTML = `
           <div class="card-header">
-            <span class="project-label">${row.projectName || ""}</span>
+            <div class="label-group">
+              <span class="project-label">${row.projectName || ""}</span>
+              <span class="count-label">${sameKeyCount} items</span>
+              ${row.exist ? '<span class="exist-label">EXIST</span>' : ''}
+            </div>
             <div class="card-actions">
               <button class="card-action-btn locate-btn" title="Locate">
                 📍<span class="tooltip">Locate</span>
@@ -607,8 +680,9 @@ function renderCardList(data, editingIdx = null) {
         // 綁定 action btns
         card.querySelector('.locate-btn').onclick = (e) => {
           e.stopPropagation();
+          const locateUuid = getNextLocateUuid(row);
           parent.postMessage({
-            pluginMessage: { type: "locate-row", uuid: row.uuid }
+            pluginMessage: { type: "locate-row", uuid: locateUuid }
           }, "*");
         };
         card.querySelector('.edit-btn').onclick = (e) => {
@@ -674,8 +748,11 @@ function renderCardList(data, editingIdx = null) {
             pluginMessage: {
               type: "update-row",
               uuid: row.uuid,
+              oldProjectName: row.projectName || "",
+              oldKeyName: row.keyName || "",
               projectName: newProject,
-              keyName: newKey
+              keyName: newKey,
+              applyToSameKey: true
             }
           }, "*");
         };
@@ -954,12 +1031,14 @@ window.onmessage = (event) => {
     currentData = pluginMessage.data;
     editingIndex = null;
     showDupKeys = [];
+    locateCycleCursor = {};
     updateAllUI();
   }
   if (pluginMessage && pluginMessage.type === "lokalise-data-updated") {
     currentData = pluginMessage.data;
     editingIndex = null;
     showDupKeys = [];
+    locateCycleCursor = {};
     updateAllUI();
   }
   if (pluginMessage && pluginMessage.type === "project-list") {

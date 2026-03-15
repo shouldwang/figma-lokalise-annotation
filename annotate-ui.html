@@ -4,6 +4,17 @@
     margin: 0;
     padding: 12px;
     background: #fafafa;
+    color: #222;
+    padding-bottom: 72px;
+  }
+  .hidden {
+    display: none;
+  }
+  .header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 10px;
   }
   h4 {
     margin: 0 0 8px 0;
@@ -21,40 +32,23 @@
     flex-wrap: wrap;
     gap: 8px;
   }
-  .radio-group.position-row {
-    display: flex;
-    flex-direction: row;
-    gap: 8px;
-    width: 100%;
-  }
   .radio-option {
     display: flex;
     align-items: center;
-    justify-content: flex-start;
+    justify-content: center;
     flex: 1 1 calc(50% - 8px);
     box-sizing: border-box;
     padding: 4px 8px;
     height: 40px;
-    border: 1px solid #E6E6E6;
+    border: 1px solid #e6e6e6;
     border-radius: 4px;
-    font-size: 16px;
+    font-size: 15px;
     font-family: inherit;
     background: #fff;
-    gap: 8px;
-    transition: border 0.15s;
-    position: relative;
-  }
-  .radio-group.position-row .radio-option {
-    flex: 1 1 calc(20% - 8px);
-    justify-content: center;
-    text-align: center;
+    cursor: pointer;
   }
   .radio-option.selected {
-    border: 2px solid #1D4ED8;
-  }
-  .radio-group.position-row .radio-option.selected {
-    border: 2px solid #1D4ED8;
-    z-index: 1;
+    border: 2px solid #1d4ed8;
   }
   .radio-option input[type="radio"] {
     display: none;
@@ -71,16 +65,202 @@
     transition: border-color 0.15s, box-shadow 0.15s;
   }
   .full-width:focus {
-    border-color: #1D4ED8;
-    box-shadow: 0 0 0 2px #1D4ED833;
+    border-color: #1d4ed8;
+    box-shadow: 0 0 0 2px #1d4ed833;
+    outline: none;
   }
   .input-desc {
     font-size: 13px;
     color: #777;
     margin: 4px;
   }
-
-  
+  .position-picker {
+    display: grid;
+    grid-template-columns: 1fr 8px minmax(88px, 1.2fr) 8px 1fr;
+    grid-template-rows: 40px 12px auto 12px 40px;
+    gap: 8px;
+    align-items: center;
+    justify-items: center;
+    width: 100%;
+  }
+  .pos-btn {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 40px;
+    border: 1px solid #e6e6e6;
+    border-radius: 12px;
+    background: #fff;
+    font-size: 13px;
+    cursor: pointer;
+    box-sizing: border-box;
+    color: #444;
+    overflow: visible;
+  }
+  .pos-btn input[type="radio"] {
+    display: none;
+  }
+  .pos-btn.selected {
+    border: 2px solid #1d4ed8;
+  }
+  .pos-top {
+    grid-column: 3;
+    grid-row: 1;
+    width: 100%;
+  }
+  .pos-left {
+    grid-column: 1;
+    grid-row: 3;
+    width: 100%;
+  }
+  .pos-right {
+    grid-column: 5;
+    grid-row: 3;
+    width: 100%;
+  }
+  .pos-bottom {
+    grid-column: 3;
+    grid-row: 5;
+    width: 100%;
+  }
+  .position-center {
+    position: relative;
+    grid-column: 3;
+    grid-row: 3;
+    padding: 8px 16px;
+    border: 2px solid #0c8ce9;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #444;
+    font-size: 14px;
+    background: #fff;
+    box-sizing: border-box;
+  }
+  .position-center .handle {
+    position: absolute;
+    width: 8px;
+    height: 8px;
+    border: 2px solid #0c8ce9;
+    background: #fff;
+    box-sizing: border-box;
+  }
+  .position-center .tl {
+    top: -6px;
+    left: -6px;
+  }
+  .position-center .tr {
+    top: -6px;
+    right: -6px;
+  }
+  .position-center .bl {
+    bottom: -6px;
+    left: -6px;
+  }
+  .position-center .br {
+    bottom: -6px;
+    right: -6px;
+  }
+  .pos-btn::before,
+  .pos-btn::after {
+    content: '';
+    position: absolute;
+  }
+  .pos-btn::before {
+    display: none;
+    background: #d0d0d0;
+  }
+  .pos-btn::after {
+    display: none;
+    border-style: solid;
+  }
+  .pos-top::before,
+  .pos-top::after,
+  .pos-bottom::before,
+  .pos-bottom::after,
+  .pos-left::before,
+  .pos-left::after,
+  .pos-right::before,
+  .pos-right::after {
+    display: block;
+  }
+  .pos-top::before {
+    width: 2px;
+    height: 12px;
+    left: 50%;
+    bottom: -12px;
+    transform: translateX(-50%);
+  }
+  .pos-top::after {
+    border-width: 6px 5px 0 5px;
+    border-color: #d0d0d0 transparent transparent transparent;
+    left: 50%;
+    bottom: -18px;
+    transform: translateX(-50%);
+  }
+  .pos-bottom::before {
+    width: 2px;
+    height: 12px;
+    left: 50%;
+    top: -12px;
+    transform: translateX(-50%);
+  }
+  .pos-bottom::after {
+    border-width: 0 5px 6px 5px;
+    border-color: transparent transparent #d0d0d0 transparent;
+    left: 50%;
+    top: -18px;
+    transform: translateX(-50%);
+  }
+  .pos-left::before {
+    height: 2px;
+    width: 12px;
+    right: -12px;
+    top: 50%;
+    transform: translateY(-50%);
+  }
+  .pos-left::after {
+    border-width: 5px 0 5px 6px;
+    border-color: transparent transparent transparent #d0d0d0;
+    right: -18px;
+    top: 50%;
+    transform: translateY(-50%);
+  }
+  .pos-right::before {
+    height: 2px;
+    width: 12px;
+    left: -12px;
+    top: 50%;
+    transform: translateY(-50%);
+  }
+  .pos-right::after {
+    border-width: 5px 6px 5px 0;
+    border-color: transparent #d0d0d0 transparent transparent;
+    left: -18px;
+    top: 50%;
+    transform: translateY(-50%);
+  }
+  .pos-top.selected::before,
+  .pos-bottom.selected::before,
+  .pos-left.selected::before,
+  .pos-right.selected::before {
+    background: #1d4ed8;
+  }
+  .pos-top.selected::after {
+    border-color: #1d4ed8 transparent transparent transparent;
+  }
+  .pos-bottom.selected::after {
+    border-color: transparent transparent #1d4ed8 transparent;
+  }
+  .pos-left.selected::after {
+    border-color: transparent transparent transparent #1d4ed8;
+  }
+  .pos-right.selected::after {
+    border-color: transparent #1d4ed8 transparent transparent;
+  }
   .footer-btn-container {
     position: fixed;
     left: 0;
@@ -99,16 +279,90 @@
     font-size: 16px;
     font-weight: 600;
     font-family: inherit;
-    background: #1D4ED8;
+    background: #1d4ed8;
     color: #fff;
     border: none;
     border-radius: 4px;
     height: 40px;
     cursor: pointer;
   }
-  #create:disabled {
+  .secondary-btn {
+    background: #ffffff;
+    color: #1d4ed8;
+    border: 1px solid #1d4ed8;
+  }
+  .footer-btn:disabled {
     background: #b3c7e6;
     cursor: not-allowed;
+  }
+  .ghost-btn {
+    width: auto;
+    height: 32px;
+    padding: 0 10px;
+    border: 1px solid #e6e6e6;
+    border-radius: 4px;
+    background: #fff;
+    font-size: 13px;
+    cursor: pointer;
+  }
+  .danger-btn {
+    background: #c62828;
+  }
+  .danger-btn:disabled {
+    background: #e7a6a6;
+  }
+  .danger-outline-btn {
+    width: 100%;
+    height: 40px;
+    margin-top: 8px;
+    border: 1px solid #c62828;
+    border-radius: 4px;
+    background: #fff;
+    color: #c62828;
+    font-size: 14px;
+    font-weight: 600;
+    font-family: inherit;
+    cursor: pointer;
+  }
+  .danger-outline-btn:disabled {
+    color: #e7a6a6;
+    border-color: #e7a6a6;
+    cursor: not-allowed;
+  }
+  .bind-card {
+    background: #fff;
+    border: 1px solid #efefef;
+    border-radius: 4px;
+    padding: 12px;
+    margin-bottom: 16px;
+  }
+  .bind-title {
+    margin: 0 0 8px 0;
+    font-size: 16px;
+    font-weight: 600;
+  }
+  .bind-desc {
+    font-size: 14px;
+    color: #444;
+    margin: 0;
+    line-height: 1.5;
+  }
+  .hint {
+    font-size: 13px;
+    color: #777;
+    margin-top: 6px;
+  }
+  .mono {
+    background: #fff;
+    border: 1px solid #efefef;
+    border-radius: 4px;
+    min-height: 40px;
+    padding: 8px;
+    margin-bottom: 8px;
+    font-size: 14px;
+    line-height: 1.4;
+    color: #333;
+    word-break: break-all;
   }
   #errorMsg {
     color: red;
@@ -153,85 +407,1204 @@
     text-align: center;
     font-weight: 500;
   }
-  body {
-    padding-bottom: 72px; /* 預留空間，footer-btn-container高度約72px */
+  .settings-desc {
+    font-size: 14px;
+    color: #777;
+    line-height: 1.5;
+    margin-top: 2px;
+    margin-bottom: 8px;
+  }
+  .setting-project-display {
+    min-height: 40px;
+    box-sizing: border-box;
+    padding: 10px;
+    font-size: 14px;
+    line-height: 1.5;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    background: #f5f7fa;
+    color: #555;
+    word-break: break-word;
+  }
+  .settings-project-empty-tip {
+    color: #e00;
+    font-weight: 500;
+    font-size: 14px;
+    display: none;
+    margin-top: 8px;
+  }
+  .language-dropdown-container {
+    position: relative;
+    width: 100%;
+    margin: 8px 0;
+  }
+  .language-search-input {
+    width: 100%;
+    height: 40px;
+    padding: 8px 32px 8px 12px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 14px;
+    background: #fff;
+    cursor: pointer;
+    box-sizing: border-box;
+  }
+  .language-search-input:focus {
+    outline: none;
+    border-color: #1d4ed8;
+    box-shadow: 0 0 0 2px rgba(29, 78, 216, 0.1);
+  }
+  .language-dropdown-arrow {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    pointer-events: none;
+    color: #666;
+    font-size: 12px;
+  }
+  .language-dropdown-list {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    max-height: 200px;
+    background: #fff;
+    border: 1px solid #ccc;
+    border-top: none;
+    border-radius: 0 0 4px 4px;
+    overflow-y: auto;
+    z-index: 100;
+    display: none;
+  }
+  .language-dropdown-item {
+    padding: 8px 12px;
+    font-size: 14px;
+    color: #333;
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+  .language-dropdown-item:hover {
+    background: #f5f7fa;
+  }
+  .language-dropdown-item.selected {
+    background: #1d4ed8;
+    color: #fff;
+  }
+  .language-dropdown-item.highlighted {
+    background: #e5e7eb;
+    color: #333;
+  }
+  .language-dropdown-item.selected.highlighted {
+    background: #1e40af;
+    color: #fff;
+  }
+  #supportedLanguagesChips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin: 8px 0;
+    min-height: 32px;
+    align-items: center;
+  }
+  .language-chip {
+    display: inline-flex;
+    align-items: center;
+    height: 28px;
+    padding: 0 8px;
+    background: #e5e7eb;
+    border-radius: 14px;
+    font-size: 12px;
+    font-weight: 600;
+    color: #374151;
+    gap: 6px;
+  }
+  .language-chip-remove {
+    width: 16px;
+    height: 16px;
+    margin: 0;
+    padding: 0;
+    border-radius: 50%;
+    background: #9ca3af;
+    color: #fff;
+    border: none;
+    cursor: pointer;
+    font-size: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.15s;
+  }
+  .language-chip-remove:hover {
+    background: #6b7280;
   }
 </style>
-<div id="preview">
-  <h5>content preview</h5>
-  <span id="previewContent">Please select a text node to annotate.</span>
-</div>
-<div class="row">
-  <h4>Name Your Key</h4>
-  <input id="customInput" class="full-width" type="text" pattern="[A-Za-z0-9\-\_\.]*" title="只能輸入大小寫英文、數字、-、_、.">
-  <div class="input-desc"> You can only use uppercase and lowercase letters, numbers, -, _, and . for key names.</div>
-  <div id="errorMsg">Please enter a valid lokalise key name</div>
-</div>
-<div class="row">
-  <h4>Choose a Lokalise Project</h4>
-  <div class="radio-group" id="projectRadioGroup"></div>
-  <div id="projectEmptyTip" class="project-empty-tip" style="display:none;">
-    You have no projects yet. Please create a project in the plugin settings.
+
+<div id="bindView" class="hidden">
+  <div class="bind-card">
+    <p class="bind-title">Component Binding</p>
+    <p class="bind-desc">Select one Lokalise Annotation component set, component, or instance on canvas, then click Bind.</p>
+  </div>
+  <div class="footer-btn-container">
+    <button id="bindBtn" class="footer-btn" disabled>Bind</button>
+    <button id="createBindBtn" class="footer-btn secondary-btn" style="margin-top: 8px;">Create &amp; Bind Component</button>
+    <div class="hint" style="padding: 0 12px;">Button stays disabled until a node is selected.</div>
   </div>
 </div>
-<div class="row">
-  <h4>Positioning</h4>
-  <div class="radio-group position-row" id="positionRadioGroup">
-    <label class="radio-option">
-      <input type="radio" name="position" value="auto" checked>
-      <span>Auto</span>
-    </label>
-    <label class="radio-option">
-      <input type="radio" name="position" value="left">
-      <span>Left</span>
-    </label>
-    <label class="radio-option">
-      <input type="radio" name="position" value="right">
-      <span>Right</span>
-    </label>
-    <label class="radio-option">
-      <input type="radio" name="position" value="top">
-      <span>Top</span>
-    </label>
-    <label class="radio-option">
-      <input type="radio" name="position" value="bottom">
-      <span>Bottom</span>
-    </label>
+
+<div id="mainView" class="hidden">
+  <div class="header">
+    <h4 style="margin: 0;">Lokalise Annotation</h4>
+    <button id="settingsBtn" class="ghost-btn" type="button">Settings</button>
+  </div>
+
+  <div id="preview">
+    <h5>content preview</h5>
+    <span id="previewContent">Please select a text node to annotate.</span>
+  </div>
+
+  <div class="row">
+    <h4>Name Your Key</h4>
+    <input id="customInput" class="full-width" type="text" pattern="[A-Za-z0-9\-\_\.]*" title="只能輸入大小寫英文、數字、-、_、.">
+    <div class="input-desc"> You can only use uppercase and lowercase letters, numbers, -, _, and . for key names.</div>
+    <div id="errorMsg">Please enter a valid lokalise key name</div>
+  </div>
+
+  <div class="row">
+    <h4>Choose a Lokalise Project</h4>
+    <div class="radio-group" id="projectRadioGroup"></div>
+    <div id="projectEmptyTip" class="project-empty-tip" style="display:none;">
+      No projectName values found in the bound component. Please check component variants.
+    </div>
+  </div>
+
+  <div class="row">
+    <h4>Entry Type</h4>
+    <div class="radio-group" id="existRadioGroup">
+      <label class="radio-option selected">
+        <input type="radio" name="existType" value="false" checked>
+        <span>New Key</span>
+      </label>
+      <label class="radio-option">
+        <input type="radio" name="existType" value="true">
+        <span>Exist Key</span>
+      </label>
+    </div>
+  </div>
+
+  <div class="row">
+    <h4>Positioning</h4>
+    <div id="positionRadioGroup">
+      <div class="position-picker">
+        <label class="pos-btn pos-top">
+          <input type="radio" name="position" value="top">
+          <span>Top</span>
+        </label>
+        <label class="pos-btn pos-left">
+          <input type="radio" name="position" value="left">
+          <span>Left</span>
+        </label>
+        <div class="position-center">
+          <span>Textfield</span>
+          <span class="handle tl"></span>
+          <span class="handle tr"></span>
+          <span class="handle bl"></span>
+          <span class="handle br"></span>
+        </div>
+        <label class="pos-btn pos-right">
+          <input type="radio" name="position" value="right">
+          <span>Right</span>
+        </label>
+        <label class="pos-btn pos-bottom">
+          <input type="radio" name="position" value="bottom">
+          <span>Bottom</span>
+        </label>
+      </div>
+    </div>
+  </div>
+
+  <div class="footer-btn-container">
+    <button id="create" class="footer-btn" disabled>Create</button>
   </div>
 </div>
-<!-- 把原本的 button 換到 container -->
-<div class="footer-btn-container">
-  <button id="create" class="footer-btn" disabled>Create</button>
+
+<div id="settingsView" class="hidden">
+  <div class="header">
+    <h4 style="margin: 0;">settings</h4>
+    <button id="backBtn" class="ghost-btn" type="button">Back</button>
+  </div>
+  <div class="row">
+    <h4>Bound Component</h4>
+    <div id="boundComponentText" class="mono">-</div>
+    <button id="unbindBtn" class="danger-outline-btn" type="button">unbind componenet</button>
+  </div>
+  <div class="row">
+    <h4>Projects</h4>
+    <div class="settings-desc">Auto-synced from bound component <code>projectName</code> values. Add or edit variants to manage project options.</div>
+    <div id="settingsProjectDisplay" class="setting-project-display">-</div>
+    <div id="settingsProjectEmptyTip" class="settings-project-empty-tip"></div>
+  </div>
+  <div class="row">
+    <h4>Base Language</h4>
+    <div class="settings-desc">Set the base language in your product.</div>
+    <div class="language-dropdown-container">
+      <input id="baseLanguageInput" class="language-search-input" type="text">
+      <span class="language-dropdown-arrow">▼</span>
+      <div id="baseLanguageDropdown" class="language-dropdown-list"></div>
+    </div>
+  </div>
+  <div class="row">
+    <h4>Supported Languages (Optional)</h4>
+    <div class="settings-desc">Pick up all supported languages in your product.</div>
+    <div class="language-dropdown-container">
+      <input id="supportedLanguagesInput" class="language-search-input" type="text" placeholder="Search and select languages...">
+      <span class="language-dropdown-arrow">▼</span>
+      <div id="supportedLanguagesDropdown" class="language-dropdown-list"></div>
+    </div>
+    <div id="supportedLanguagesChips"></div>
+  </div>
+  <div class="footer-btn-container">
+    <button id="saveSettingsBtn" class="footer-btn" type="button">Save Settings</button>
+  </div>
 </div>
+
 <script>
 let projectList = [];
-let currentAnnotationInfo = null; // 儲存當前標注資訊
+let currentAnnotationInfo = null;
+let isBound = false;
+let hasCanvasSelection = false;
 
-// 從 plugin 主程式取得專案資料
-function requestProjectList() {
-  console.log('[annotate-ui] requestProjectList');
-  parent.postMessage({ pluginMessage: { type: "get-projects" } }, "*");
+const bindView = document.getElementById('bindView');
+const mainView = document.getElementById('mainView');
+const settingsView = document.getElementById('settingsView');
+const bindBtn = document.getElementById('bindBtn');
+const createBindBtn = document.getElementById('createBindBtn');
+const settingsBtn = document.getElementById('settingsBtn');
+const backBtn = document.getElementById('backBtn');
+const unbindBtn = document.getElementById('unbindBtn');
+const saveSettingsBtn = document.getElementById('saveSettingsBtn');
+const boundComponentTextEl = document.getElementById('boundComponentText');
+const settingsProjectDisplay = document.getElementById('settingsProjectDisplay');
+const settingsProjectEmptyTip = document.getElementById('settingsProjectEmptyTip');
+const createBtn = document.getElementById('create');
+const input = document.getElementById('customInput');
+const errorMsg = document.getElementById('errorMsg');
+const previewContent = document.getElementById('previewContent');
+
+let selectedBaseLanguage = { code: 'en', name: 'English' };
+let selectedSupportedLanguages = [];
+const defaultSupportedLanguages = [
+  { code: 'ja', name: 'Japanese' },
+  { code: 'zh_TW', name: 'Chinese Traditional' },
+  { code: 'en_US', name: 'English (United States)' },
+  { code: 'zh_CN', name: 'Chinese Simplified' }
+];
+
+    const localeData = {
+      "ab": "Abkhaz",
+      "aa": "Afar",
+      "af": "Afrikaans",
+      "af_NA": "Afrikaans (Namibia)",
+      "af_ZA": "Afrikaans (South Africa)",
+      "agq": "Aghem",
+      "ak": "Akan",
+      "ak_GH": "Akan (Ghana)",
+      "sq": "Albanian",
+      "sq_AL": "Albanian (Albania)",
+      "am": "Amharic",
+      "ar": "Arabic",
+      "ar_DZ": "Arabic (Algeria)",
+      "ar_BH": "Arabic (Bahrain)",
+      "ar_EG": "Arabic (Egypt)",
+      "ar_IQ": "Arabic (Iraq)",
+      "ar_JO": "Arabic (Jordan)",
+      "ar_KW": "Arabic (Kuwait)",
+      "ar_LB": "Arabic (Lebanon)",
+      "ar_LY": "Arabic (Libya)",
+      "ar_MA": "Arabic (Morocco)",
+      "ar_OM": "Arabic (Oman)",
+      "ar_QA": "Arabic (Qatar)",
+      "ar_SA": "Arabic (Saudi Arabia)",
+      "ar_SD": "Arabic (Sudan)",
+      "ar_SY": "Arabic (Syria)",
+      "ar_TN": "Arabic (Tunisia)",
+      "ar_AE": "Arabic (United Arab Emirates)",
+      "ar_001": "Arabic (World)",
+      "ar_YE": "Arabic (Yemen)",
+      "an": "Aragonese",
+      "hy": "Armenian",
+      "as": "Assamese",
+      "asa": "Asu",
+      "av": "Avaric",
+      "ae": "Avestan",
+      "ay": "Aymara",
+      "az": "Azerbaijani",
+      "az_AZ": "Azerbaijani (Azerbaijan)",
+      "az_Cyrl_AZ": "Azerbaijani (Cyrillic, Azerbaijan)",
+      "az_Cyrl": "Azerbaijani (Cyrillic)",
+      "azb": "Azerbaijani (South)",
+      "ksf": "Bafia",
+      "bm": "Bambara",
+      "bas": "Basaa",
+      "ba": "Bashkir",
+      "eu_ES": "Basque (Spain)",
+      "be": "Belarusian",
+      "be_BY": "Belarusian (Belarus)",
+      "bem": "Bemba",
+      "bez": "Bena",
+      "bn": "Bengali",
+      "bn_BD": "Bengali (Bangladesh)",
+      "bn_IN": "Bengali (India)",
+      "bh": "Bihari",
+      "bi": "Bislama",
+      "brx": "Bodo",
+      "bs_BA": "Bosnian (Bosnia and Herzegovina)",
+      "br": "Breton",
+      "bg": "Bulgarian",
+      "bg_BG": "Bulgarian (Bulgaria)",
+      "my": "Burmese",
+      "ca": "Catalan",
+      "ceb": "Cebuano",
+      "tzm": "Central Morocco Tamazight",
+      "ch": "Chamorro",
+      "ce": "Chechen",
+      "chr": "Cherokee",
+      "ny": "Chichewa",
+      "cgg": "Chiga",
+      "zh_CN": "Chinese Simplified",
+      "zh_Hans_CN": "Chinese Simplified (China)",
+      "zh_Hans_HK": "Chinese Simplified (Hong Kong)",
+      "zh_Hans_MO": "Chinese Simplified (Macau)",
+      "zh_MY": "Chinese Simplified (Malay)",
+      "zh_SG": "Chinese Simplified (Singapore)",
+      "zh_Hans_SG": "Chinese Simplified (Singapore)",
+      "zh_TW": "Chinese Traditional",
+      "zh_HK": "Chinese Traditional (Hong Kong)",
+      "zh_Hant_HK": "Chinese Traditional (Hong Kong)",
+      "zh_Hant_MO": "Chinese Traditional (Macau)",
+      "zh_Hant_TW": "Chinese Traditional (Taiwan)",
+      "cu": "Church Slavic",
+      "cv_CV": "Chuvash",
+      "swc": "Congo Swahili",
+      "kw": "Cornish",
+      "co": "Corsican",
+      "cr": "Cree",
+      "hr": "Croatian",
+      "hr_HR": "Croatian (Croatia)",
+      "cs": "Czech",
+      "cs_CZ": "Czech (Czech Republic)",
+      "da": "Danish",
+      "da_DK": "Danish (Denmark)",
+      "prs": "Dari",
+      "dv": "Divehi",
+      "dua": "Duala",
+      "nl": "Dutch",
+      "nl_AW": "Dutch (Aruba)",
+      "nl_BE": "Dutch (Belgium)",
+      "nl_CW": "Dutch (Curaçao)",
+      "nl_LU": "Dutch (Luxembourg)",
+      "nl_NL": "Dutch (Netherlands)",
+      "nl_SX": "Dutch (Sint Maarten)",
+      "dz": "Dzongkha",
+      "ebu": "Embu",
+      "en": "English",
+      "en_AS": "English (American Samoa)",
+      "en_AU": "English (Australia)",
+      "en_BB": "English (Barbados)",
+      "en_BE": "English (Belgium)",
+      "en_BZ": "English (Belize)",
+      "en_BM": "English (Bermuda)",
+      "en_BW": "English (Botswana)",
+      "en_CA": "English (Canada)",
+      "en_DK": "English (Denmark)",
+      "en_FI": "English (Finland)",
+      "en_FR": "English (France)",
+      "en_GU": "English (Guam)",
+      "en_GY": "English (Guyana)",
+      "en_HK": "English (Hong Kong SAR China)",
+      "en_IN": "English (India)",
+      "en_ID": "English (Indonesia)",
+      "en_IE": "English (Ireland)",
+      "en_IL": "English (Israel)",
+      "en_JM": "English (Jamaica)",
+      "en_JP": "English (Japan)",
+      "en_KR": "English (Korea)",
+      "en_LU": "English (Luxembourg)",
+      "en_MO": "English (Macau)",
+      "en_MY": "English (Malaysia)",
+      "en_MT": "English (Malta)",
+      "en_MH": "English (Marshall Islands)",
+      "en_MU": "English (Mauritius)",
+      "en_MX": "English (Mexico)",
+      "en_NA": "English (Namibia)",
+      "en_NL": "English (Netherlands)",
+      "en_NZ": "English (New Zealand)",
+      "en_NG": "English (Nigeria)",
+      "en_MP": "English (Northern Mariana Islands)",
+      "en_NO": "English (Norway)",
+      "en_PK": "English (Pakistan)",
+      "en_PH": "English (Philippines)",
+      "en_SG": "English (Singapore)",
+      "en_ZA": "English (South Africa)",
+      "en_ES": "English (Spain)",
+      "en_SE": "English (Sweden)",
+      "en_CH": "English (Switzerland)",
+      "en_TW": "English (Taiwan)",
+      "en_TH": "English (Thailand)",
+      "en_TT": "English (Trinidad and Tobago)",
+      "en_UM": "English (U.S. Minor Outlying Islands)",
+      "en_VI": "English (U.S. Virgin Islands)",
+      "en_AE": "English (United Arab Emirates)",
+      "en_GB": "English (United Kingdom)",
+      "en_US": "English (United States)",
+      "en_ZW": "English (Zimbabwe)",
+      "eo": "Esperanto",
+      "et": "Estonian ",
+      "et_EE": "Estonian (Estonia)",
+      "ee": "Ewe",
+      "ee_GH": "Ewe (Ghana)",
+      "ee_TG": "Ewe (Togo)",
+      "ewo": "Ewondo",
+      "fo_FO": "Faroese (Faroe Islands)",
+      "fj": "Fijian",
+      "fil": "Filipino",
+      "fil_PH": "Filipino (Philippines)",
+      "fi": "Finnish",
+      "fi_FI": "Finnish (Finland)",
+      "fl": "Flemish",
+      "fr": "French",
+      "fr_BE": "French (Belgium)",
+      "fr_BJ": "French (Benin)",
+      "fr_BF": "French (Burkina Faso)",
+      "fr_BI": "French (Burundi)",
+      "fr_CM": "French (Cameroon)",
+      "fr_CA": "French (Canada)",
+      "fr_CF": "French (Central African Republic)",
+      "fr_TD": "French (Chad)",
+      "fr_KM": "French (Comoros)",
+      "fr_CG": "French (Congo - Brazzaville)",
+      "fr_CD": "French (Congo - Kinshasa)",
+      "fr_CI": "French (Côte d'Ivoire)",
+      "fr_DJ": "French (Djibouti)",
+      "fr_GQ": "French (Equatorial Guinea)",
+      "fr_FR": "French (France)",
+      "fr_GF": "French (French Guiana)",
+      "fr_GA": "French (Gabon)",
+      "fr_GP": "French (Guadeloupe)",
+      "fr_GN": "French (Guinea)",
+      "fr_LU": "French (Luxembourg)",
+      "fr_MG": "French (Madagascar)",
+      "fr_ML": "French (Mali)",
+      "fr_MQ": "French (Martinique)",
+      "fr_YT": "French (Mayotte)",
+      "fr_MC": "French (Monaco)",
+      "fr_MA": "French (Morocco)",
+      "fr_NE": "French (Niger)",
+      "fr_RE": "French (Réunion)",
+      "fr_RW": "French (Rwanda)",
+      "fr_BL": "French (Saint Barthélemy)",
+      "fr_MF": "French (Saint Martin)",
+      "fr_SN": "French (Senegal)",
+      "fr_CH": "French (Switzerland)",
+      "fr_TG": "French (Togo)",
+      "fy_NL": "Frisian",
+      "ff": "Fulah",
+      "gl_ES": "Galician (Spain)",
+      "lg": "Ganda",
+      "ka_GE": "Georgian (Georgia)",
+      "de": "German",
+      "de_AT": "German (Austria)",
+      "de_BE": "German (Belgium)",
+      "de_DE": "German (Germany)",
+      "de_LI": "German (Liechtenstein)",
+      "de_LU": "German (Luxembourg)",
+      "de_CH": "German (Switzerland)",
+      "el": "Greek",
+      "el_CY": "Greek (Cyprus)",
+      "el_GR": "Greek (Greece)",
+      "gn": "GuaranÃ­",
+      "gu_IN": "Gujarati (India)",
+      "guz": "Gusii",
+      "ht_HT": "Haitian Creole",
+      "ha": "Hausa",
+      "ha_GH": "Hausa (Ghana)",
+      "ha_NE": "Hausa (Niger)",
+      "ha_NG": "Hausa (Nigeria)",
+      "haw": "Hawaiian",
+      "he": "Hebrew",
+      "he_IL": "Hebrew (Israel)",
+      "hz": "Herero",
+      "hi": "Hindi",
+      "hi_IN": "Hindi (India)",
+      "ho": "Hiri Motu",
+      "hmn": "Hmong",
+      "hu": "Hungarian",
+      "hu_HU": "Hungarian (Hungary)",
+      "is": "Icelandic",
+      "is_IS": "Icelandic (Iceland)",
+      "io": "Ido",
+      "ig": "Igbo",
+      "id": "Indonesian",
+      "id_ID": "Indonesian (Indonesia)",
+      "ia": "Interlingua",
+      "ie": "Interlingue",
+      "iu": "Inuktitut",
+      "ik": "Inupiaq",
+      "ga_IE": "Irish (Ireland)",
+      "it": "Italian",
+      "it_IT": "Italian (Italy)",
+      "it_CH": "Italian (Switzerland)",
+      "ja": "Japanese",
+      "ja_JP": "Japanese (Japan)",
+      "jv": "Javanese",
+      "dyo": "Jola-Fonyi",
+      "kea": "Kabuverdianu",
+      "kab": "Kabyle",
+      "kl": "Kalaallisut",
+      "kln": "Kalenjin",
+      "kam": "Kamba",
+      "kn": "Kannada",
+      "kn_IN": "Kannada (India)",
+      "kr": "Kanuri",
+      "ks": "Kashmiri",
+      "kk": "Kazakh",
+      "km_KH": "Khmer (Cambodia)",
+      "ki": "Kikuyu",
+      "rw": "Kinyarwanda",
+      "tlh_KL": "Klingon",
+      "kv": "Komi",
+      "kg": "Kongo",
+      "kok": "Konkani",
+      "koo": "Konzo",
+      "ko": "Korean",
+      "ko_KR": "Korean (Korea)",
+      "khq": "Koyra Chiini",
+      "ses": "Koyraboro Senni",
+      "ku_TR": "Kurdish",
+      "ku_BA": "Kurdish (Badini)",
+      "ku_KRM": "Kurdish (Kurmanji)",
+      "ku_CKB": "Kurdish (Sorani)",
+      "sdh": "Kurdish (Southern)",
+      "kj": "Kwanyama",
+      "nmg": "Kwasio",
+      "ky": "Kyrgyz",
+      "lag": "Langi",
+      "laj": "Lango (Uganda)",
+      "lo": "Lao",
+      "la_VA": "Latin",
+      "lv": "Latvian",
+      "lv_LV": "Latvian (Latvia)",
+      "li": "Limburgish",
+      "ln": "Lingala",
+      "ln_CG": "Lingala (Congo - Brazzaville)",
+      "ln_CD": "Lingala (Congo - Kinshasa)",
+      "lt": "Lithuanian",
+      "lt_LT": "Lithuanian (Lithuania)",
+      "lu": "Luba-Katanga",
+      "lgg": "Lugbara",
+      "luo": "Luo",
+      "lb": "Luxembourgish",
+      "luy": "Luyia",
+      "mk_MK": "Macedonian (Macedonia)",
+      "jmc": "Machame",
+      "mgh": "Makhuwa-Meetto",
+      "kde": "Makonde",
+      "mg": "Malagasy",
+      "ms": "Malay",
+      "ms_BN": "Malay (Brunei)",
+      "ms_MY": "Malay (Malaysia)",
+      "ms_SG": "Malay (Singapore)",
+      "ml": "Malayalam",
+      "ml_IN": "Malayalam (India)",
+      "mt_MT": "Maltese (Malta)",
+      "gv": "Manx",
+      "mi_NZ": "Maori",
+      "mr": "Marathi",
+      "mh": "Marshallese",
+      "myx": "Masaaba",
+      "mas": "Masai",
+      "mas_KE": "Masai (Kenya)",
+      "mas_TZ": "Masai (Tanzania)",
+      "mer": "Meru",
+      "mn_MN": "Mongolian",
+      "mfe": "Morisyen",
+      "mua": "Mundang",
+      "naq": "Nama",
+      "na": "Nauru",
+      "nv": "Navajo, Navaho",
+      "ndc": "Ndau",
+      "ng": "Ndonga",
+      "nap_IT": "Neapolitan",
+      "ne": "Nepali",
+      "ne_IN": "Nepali (India)",
+      "ne_NP": "Nepali (Nepal)",
+      "nd": "North Ndebele",
+      "se": "Northern Sami",
+      "no": "Norwegian",
+      "no_NO": "Norwegian (Norway)",
+      "nb": "Norwegian Bokmål",
+      "nb_NO": "Norwegian Bokmål (Norway)",
+      "nn": "Norwegian Nynorsk",
+      "nn_NO": "Norwegian Nynorsk (Norway)",
+      "nus": "Nuer",
+      "nyn": "Nyankole",
+      "oc": "Occitan",
+      "oj": "Ojibwe",
+      "or_IN": "Oriya (India)",
+      "om": "Oromo",
+      "om_ET": "Oromo (Ethiopia)",
+      "om_KE": "Oromo (Kenya)",
+      "os": "Ossetian, Ossetic",
+      "pi": "Pali",
+      "ps_AF": "Pashto (Afghanistan)",
+      "nso": "Pedi",
+      "fa": "Persian",
+      "fa_AF": "Persian (Afghanistan)",
+      "fa_IR": "Persian (Iran)",
+      "pms_IT": "Piedmontese",
+      "pl": "Polish",
+      "pl_PL": "Polish (Poland)",
+      "pt": "Portuguese",
+      "pt_AO": "Portuguese (Angola)",
+      "pt_BR": "Portuguese (Brazil)",
+      "pt_GW": "Portuguese (Guinea - Bissau)",
+      "pt_MO": "Portuguese (Macau)",
+      "pt_MZ": "Portuguese (Mozambique)",
+      "pt_PT": "Portuguese (Portugal)",
+      "pt_ST": "Portuguese (São Tomé and Príncipe)",
+      "pa": "Punjabi",
+      "pa_Arab_PK": "Punjabi (Arabic, Pakistan)",
+      "pa_Arab": "Punjabi (Arabic)",
+      "pa_IN": "Punjabi (India)",
+      "qu": "Quechua",
+      "ro": "Romanian",
+      "ro_MD": "Romanian (Moldova)",
+      "ro_RO": "Romanian (Romania)",
+      "rm": "Romansh",
+      "rof": "Rombo",
+      "rn": "Rundi",
+      "ru": "Russian",
+      "ru_AZ": "Russian (Azerbaijani)",
+      "ru_BY": "Russian (Belarus)",
+      "ru_IL": "Russian (Israel)",
+      "ru_MD": "Russian (Moldova)",
+      "ru_RU": "Russian (Russia)",
+      "ru_UA": "Russian (Ukraine)",
+      "rwk": "Rwa",
+      "saq": "Samburu",
+      "sm": "Samoan",
+      "sg": "Sango",
+      "sbp": "Sangu",
+      "sa": "Sanskrit",
+      "skr": "Saraiki",
+      "sc_IT": "Sardinian",
+      "gd": "Scottish Gaelic",
+      "seh": "Sena",
+      "swk": "Sena (Malawi)",
+      "sr": "Serbian",
+      "sr_BA": "Serbian (Bosnia and Herzegovina)",
+      "sr_Latn_BA": "Serbian (Latin, Bosnia and Herzegovina)",
+      "sr_Latn_ME": "Serbian (Latin, Montenegro)",
+      "sr_Latn_RS": "Serbian (Latin, Serbia)",
+      "sr_Latn": "Serbian (Latin)",
+      "sr_ME": "Serbian (Montenegro)",
+      "sr_RS": "Serbian (Serbia)",
+      "ksb": "Shambala",
+      "sn": "Shona",
+      "ii": "Sichuan Yi",
+      "sd": "Sindhi",
+      "si": "Sinhala",
+      "sk": "Slovak",
+      "sk_SK": "Slovak (Slovakia)",
+      "sl": "Slovenian",
+      "sl_SI": "Slovenian (Slovenia)",
+      "xog": "Soga",
+      "so": "Somali",
+      "so_DJ": "Somali (Djibouti)",
+      "so_ET": "Somali (Ethiopia)",
+      "so_KE": "Somali (Kenya)",
+      "so_SO": "Somali (Somalia)",
+      "nr": "South Ndebele",
+      "st": "Southern Sotho",
+      "es": "Spanish",
+      "es_AR": "Spanish (Argentina)",
+      "es_BO": "Spanish (Bolivia)",
+      "es_CL": "Spanish (Chile)",
+      "es_CO": "Spanish (Colombia)",
+      "es_CR": "Spanish (Costa Rica)",
+      "es_DO": "Spanish (Dominican Republic)",
+      "es_EC": "Spanish (Ecuador)",
+      "es_SV": "Spanish (El Salvador)",
+      "es_GQ": "Spanish (Equatorial Guinea)",
+      "es_GT": "Spanish (Guatemala)",
+      "es_HN": "Spanish (Honduras)",
+      "es_419": "Spanish (Latin America)",
+      "es_MX": "Spanish (Mexico)",
+      "es_NI": "Spanish (Nicaragua)",
+      "es_PA": "Spanish (Panama)",
+      "es_PY": "Spanish (Paraguay)",
+      "es_PE": "Spanish (Peru)",
+      "es_PR": "Spanish (Puerto Rico)",
+      "es_ES": "Spanish (Spain)",
+      "es_US": "Spanish (United States)",
+      "es_UY": "Spanish (Uruguay)",
+      "es_VE": "Spanish (Venezuela)",
+      "su": "Sundanese",
+      "sw": "Swahili",
+      "sw_KE": "Swahili (Kenya)",
+      "sw_TZ": "Swahili (Tanzania)",
+      "ss": "Swati",
+      "sv": "Swedish",
+      "sv_FI": "Swedish (Finland)",
+      "sv_SE": "Swedish (Sweden)",
+      "gsw": "Swiss German",
+      "shi": "Tachelhit",
+      "shi_MA": "Tachelhit (Morocco)",
+      "shi_Tfng_MA": "Tachelhit (Tifinagh, Morocco)",
+      "shi_Tfng": "Tachelhit (Tifinagh)",
+      "tl": "Tagalog",
+      "tl_PH": "Tagalog (Philippines)",
+      "ty": "Tahitian",
+      "dav": "Taita",
+      "tg": "Tajik",
+      "ta": "Tamil",
+      "ta_IN": "Tamil (India)",
+      "ta_SG": "Tamil (Singapore)",
+      "ta_LK": "Tamil (Sri Lanka)",
+      "twq": "Tasawaq",
+      "tt": "Tatar",
+      "tsg": "Tausug",
+      "tsg_Arab": "Tausug (Arab)",
+      "te": "Telugu",
+      "te_IN": "Telugu (India)",
+      "teo": "Teso",
+      "teo_KE": "Teso (Kenya)",
+      "teo_UG": "Teso (Uganda)",
+      "th": "Thai",
+      "th_TH": "Thai (Thailand)",
+      "bo": "Tibetan",
+      "bo_CN": "Tibetan (China)",
+      "bo_IN": "Tibetan (India)",
+      "ti": "Tigrinya",
+      "ti_ER": "Tigrinya (Eritrea)",
+      "ti_ET": "Tigrinya (Ethiopia)",
+      "to": "Tongan",
+      "ts": "Tsonga",
+      "tn": "Tswana",
+      "tr": "Turkish",
+      "tr_TR": "Turkish (Turkey)",
+      "tk": "Turkmen",
+      "tw": "Twi",
+      "uk": "Ukrainian",
+      "uk_UA": "Ukrainian (Ukraine)",
+      "ur": "Urdu",
+      "ur_IN": "Urdu (India)",
+      "ur_PK": "Urdu (Pakistan)",
+      "ug": "Uyghur, Uighur",
+      "uz": "Uzbek",
+      "uz_Arab_AF": "Uzbek (Arabic, Afghanistan)",
+      "uz_Arab": "Uzbek (Arabic)",
+      "uz_Latn_UZ": "Uzbek (Latin, Uzbekistan)",
+      "uz_Latn": "Uzbek (Latin)",
+      "uz_UZ": "Uzbek (Uzbekistan)",
+      "vai": "Vai",
+      "vai_Latn_LR": "Vai (Latin, Liberia)",
+      "vai_Latn": "Vai (Latin)",
+      "vai_LR": "Vai (Liberia)",
+      "ve": "Venda",
+      "vi": "Vietnamese",
+      "vi_VN": "Vietnamese (Vietnam)",
+      "vo": "Volapak",
+      "vun": "Vunjo",
+      "wa": "Walloon",
+      "cy_GB": "Welsh (United Kingdom)",
+      "wo": "Wolof",
+      "xh": "Xhosa",
+      "yav": "Yangben",
+      "yi": "Yiddish",
+      "yo": "Yoruba",
+      "yue": "Yue Chinese (Cantonese)",
+      "dje": "Zarma",
+      "za": "Zhuang, Chuang",
+      "zu": "Zulu"
+    };
+
+let isBaseLanguageSearching = false;
+let baseLanguageHighlightedIndex = -1;
+let supportedLanguageHighlightedIndex = -1;
+
+function showBindView() {
+  bindView.classList.remove('hidden');
+  mainView.classList.add('hidden');
+  settingsView.classList.add('hidden');
 }
 
-// 取得專案資料（同步變數）
+function showMainView() {
+  bindView.classList.add('hidden');
+  mainView.classList.remove('hidden');
+  settingsView.classList.add('hidden');
+}
+
+function showSettingsView() {
+  bindView.classList.add('hidden');
+  mainView.classList.add('hidden');
+  settingsView.classList.remove('hidden');
+}
+
+function renderBoundInfo(name, key) {
+  const displayName = String(name || '').trim();
+  const displayKey = String(key || '').trim();
+  if (displayName && displayKey) {
+    boundComponentTextEl.textContent = `${displayName} (${displayKey})`;
+    return;
+  }
+  boundComponentTextEl.textContent = displayName || displayKey || '-';
+}
+
+function updateBindButtonState() {
+  bindBtn.disabled = !hasCanvasSelection;
+}
+
+function requestProjectList() {
+  parent.postMessage({ pluginMessage: { type: 'get-projects' } }, '*');
+}
+
+function requestLanguageSettings() {
+  parent.postMessage({ pluginMessage: { type: 'get-language-settings' } }, '*');
+}
+
 function getProjectList() {
-  console.log('[annotate-ui] getProjectList', projectList);
   return projectList;
+}
+
+function normalizeProjectList(projects) {
+  const values = Array.isArray(projects) ? projects : [];
+  const seen = new Set();
+  const normalized = [];
+
+  values.forEach((value) => {
+    const name = String(value || '').trim();
+    if (!name || seen.has(name)) return;
+    seen.add(name);
+    normalized.push(name);
+  });
+
+  return normalized;
+}
+
+function renderSettingsProjects(projects) {
+  const values = normalizeProjectList(projects);
+  if (values.length > 0) {
+    settingsProjectDisplay.textContent = values.join(',');
+    settingsProjectEmptyTip.style.display = 'none';
+    return;
+  }
+
+  settingsProjectDisplay.textContent = '-';
+  settingsProjectEmptyTip.textContent = 'No projectName values found in the bound component.';
+  settingsProjectEmptyTip.style.display = 'block';
+}
+
+function formatLanguageDisplay(code, name) {
+  return `${name} (${code})`;
+}
+
+function updateBaseLanguageDisplay() {
+  const baseInput = document.getElementById('baseLanguageInput');
+  if (!baseInput) return;
+  baseInput.value = formatLanguageDisplay(selectedBaseLanguage.code, selectedBaseLanguage.name);
+}
+
+function updateSupportedLanguagesDisplay() {
+  const container = document.getElementById('supportedLanguagesChips');
+  if (!container) return;
+
+  container.innerHTML = selectedSupportedLanguages.map((lang, index) => {
+    const displayText = formatLanguageDisplay(lang.code, lang.name);
+    return `<div class="language-chip">
+      ${displayText}
+      <button class="language-chip-remove" data-index="${index}">×</button>
+    </div>`;
+  }).join('');
+
+  container.querySelectorAll('.language-chip-remove').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const index = parseInt(btn.dataset.index, 10);
+      selectedSupportedLanguages.splice(index, 1);
+      updateSupportedLanguagesDisplay();
+      renderSupportedLanguageOptions();
+    });
+  });
+}
+
+function initializeLanguageSettings() {
+  setupBaseLanguageDropdown();
+  setupSupportedLanguagesDropdown();
+  updateBaseLanguageDisplay();
+  updateSupportedLanguagesDisplay();
+}
+
+function setupBaseLanguageDropdown() {
+  const baseInput = document.getElementById('baseLanguageInput');
+  const dropdown = document.getElementById('baseLanguageDropdown');
+  if (!baseInput || !dropdown) return;
+
+  baseInput.addEventListener('focus', () => {
+    renderBaseLanguageOptions();
+    dropdown.style.display = 'block';
+    baseLanguageHighlightedIndex = -1;
+  });
+
+  baseInput.addEventListener('input', (e) => {
+    isBaseLanguageSearching = true;
+    renderBaseLanguageOptions(e.target.value);
+    dropdown.style.display = 'block';
+    baseLanguageHighlightedIndex = 0;
+    updateBaseLanguageHighlight();
+  });
+
+  baseInput.addEventListener('keydown', (e) => {
+    const items = dropdown.querySelectorAll('.language-dropdown-item');
+    if (dropdown.style.display === 'block' && items.length > 0) {
+      switch (e.key) {
+        case 'ArrowDown':
+          e.preventDefault();
+          baseLanguageHighlightedIndex = (baseLanguageHighlightedIndex + 1) % items.length;
+          updateBaseLanguageHighlight();
+          break;
+        case 'ArrowUp':
+          e.preventDefault();
+          baseLanguageHighlightedIndex = baseLanguageHighlightedIndex <= 0 ? items.length - 1 : baseLanguageHighlightedIndex - 1;
+          updateBaseLanguageHighlight();
+          break;
+        case 'Enter':
+          e.preventDefault();
+          if (baseLanguageHighlightedIndex >= 0 && baseLanguageHighlightedIndex < items.length) {
+            const selectedItem = items[baseLanguageHighlightedIndex];
+            selectedBaseLanguage = { code: selectedItem.dataset.code, name: selectedItem.dataset.name };
+            updateBaseLanguageDisplay();
+            dropdown.style.display = 'none';
+            isBaseLanguageSearching = false;
+            baseLanguageHighlightedIndex = -1;
+          }
+          break;
+        case 'Escape':
+          dropdown.style.display = 'none';
+          updateBaseLanguageDisplay();
+          isBaseLanguageSearching = false;
+          baseLanguageHighlightedIndex = -1;
+          break;
+      }
+    } else if (!isBaseLanguageSearching && e.key.length === 1) {
+      baseInput.value = '';
+      isBaseLanguageSearching = true;
+    }
+  });
+
+  document.addEventListener('click', (e) => {
+    if (!baseInput.parentElement.contains(e.target)) {
+      dropdown.style.display = 'none';
+      if (!isBaseLanguageSearching || baseInput.value === '') {
+        updateBaseLanguageDisplay();
+      }
+      isBaseLanguageSearching = false;
+      baseLanguageHighlightedIndex = -1;
+    }
+  });
+}
+
+function setupSupportedLanguagesDropdown() {
+  const supportedInput = document.getElementById('supportedLanguagesInput');
+  const dropdown = document.getElementById('supportedLanguagesDropdown');
+  if (!supportedInput || !dropdown) return;
+
+  supportedInput.addEventListener('input', (e) => {
+    renderSupportedLanguageOptions(e.target.value);
+    dropdown.style.display = 'block';
+    supportedLanguageHighlightedIndex = 0;
+    updateSupportedLanguageHighlight();
+  });
+
+  supportedInput.addEventListener('focus', () => {
+    renderSupportedLanguageOptions(supportedInput.value);
+    dropdown.style.display = 'block';
+    supportedLanguageHighlightedIndex = -1;
+  });
+
+  supportedInput.addEventListener('keydown', (e) => {
+    const items = dropdown.querySelectorAll('.language-dropdown-item');
+    if (dropdown.style.display === 'block' && items.length > 0) {
+      switch (e.key) {
+        case 'ArrowDown':
+          e.preventDefault();
+          supportedLanguageHighlightedIndex = (supportedLanguageHighlightedIndex + 1) % items.length;
+          updateSupportedLanguageHighlight();
+          break;
+        case 'ArrowUp':
+          e.preventDefault();
+          supportedLanguageHighlightedIndex = supportedLanguageHighlightedIndex <= 0 ? items.length - 1 : supportedLanguageHighlightedIndex - 1;
+          updateSupportedLanguageHighlight();
+          break;
+        case 'Enter':
+          e.preventDefault();
+          if (supportedLanguageHighlightedIndex >= 0 && supportedLanguageHighlightedIndex < items.length) {
+            const selectedItem = items[supportedLanguageHighlightedIndex];
+            selectedSupportedLanguages.push({ code: selectedItem.dataset.code, name: selectedItem.dataset.name });
+            updateSupportedLanguagesDisplay();
+            supportedInput.value = '';
+            renderSupportedLanguageOptions();
+            dropdown.style.display = 'none';
+            supportedLanguageHighlightedIndex = -1;
+          }
+          break;
+        case 'Escape':
+          dropdown.style.display = 'none';
+          supportedInput.value = '';
+          supportedLanguageHighlightedIndex = -1;
+          break;
+      }
+    }
+  });
+
+  document.addEventListener('click', (e) => {
+    if (!supportedInput.parentElement.contains(e.target)) {
+      dropdown.style.display = 'none';
+      supportedInput.value = '';
+      supportedLanguageHighlightedIndex = -1;
+    }
+  });
+}
+
+function updateBaseLanguageHighlight() {
+  const dropdown = document.getElementById('baseLanguageDropdown');
+  if (!dropdown) return;
+  const items = dropdown.querySelectorAll('.language-dropdown-item');
+  items.forEach((item, index) => {
+    item.classList.remove('highlighted');
+    if (index === baseLanguageHighlightedIndex) {
+      item.classList.add('highlighted');
+      item.scrollIntoView({ block: 'nearest' });
+    }
+  });
+}
+
+function updateSupportedLanguageHighlight() {
+  const dropdown = document.getElementById('supportedLanguagesDropdown');
+  if (!dropdown) return;
+  const items = dropdown.querySelectorAll('.language-dropdown-item');
+  items.forEach((item, index) => {
+    item.classList.remove('highlighted');
+    if (index === supportedLanguageHighlightedIndex) {
+      item.classList.add('highlighted');
+      item.scrollIntoView({ block: 'nearest' });
+    }
+  });
+}
+
+function renderBaseLanguageOptions(searchTerm = '') {
+  const dropdown = document.getElementById('baseLanguageDropdown');
+  if (!dropdown) return;
+
+  const filteredLanguages = Object.entries(localeData).filter(([code, name]) => {
+    const displayText = formatLanguageDisplay(code, name);
+    return displayText.toLowerCase().includes(searchTerm.toLowerCase());
+  });
+
+  dropdown.innerHTML = filteredLanguages.map(([code, name]) => {
+    const displayText = formatLanguageDisplay(code, name);
+    const isSelected = selectedBaseLanguage.code === code;
+    return `<div class="language-dropdown-item ${isSelected ? 'selected' : ''}" data-code="${code}" data-name="${name}">
+      ${displayText}
+    </div>`;
+  }).join('');
+
+  dropdown.querySelectorAll('.language-dropdown-item').forEach((item, index) => {
+    item.addEventListener('click', () => {
+      selectedBaseLanguage = { code: item.dataset.code, name: item.dataset.name };
+      updateBaseLanguageDisplay();
+      dropdown.style.display = 'none';
+      isBaseLanguageSearching = false;
+      baseLanguageHighlightedIndex = -1;
+    });
+
+    item.addEventListener('mouseenter', () => {
+      baseLanguageHighlightedIndex = index;
+      updateBaseLanguageHighlight();
+    });
+  });
+
+  if (baseLanguageHighlightedIndex >= filteredLanguages.length) {
+    baseLanguageHighlightedIndex = filteredLanguages.length > 0 ? 0 : -1;
+  }
+  updateBaseLanguageHighlight();
+}
+
+function renderSupportedLanguageOptions(searchTerm = '') {
+  const dropdown = document.getElementById('supportedLanguagesDropdown');
+  if (!dropdown) return;
+
+  const selectedCodes = selectedSupportedLanguages.map((lang) => lang.code);
+  const filteredLanguages = Object.entries(localeData).filter(([code, name]) => {
+    const displayText = formatLanguageDisplay(code, name);
+    return displayText.toLowerCase().includes(searchTerm.toLowerCase()) && !selectedCodes.includes(code);
+  });
+
+  dropdown.innerHTML = filteredLanguages.map(([code, name]) => {
+    const displayText = formatLanguageDisplay(code, name);
+    return `<div class="language-dropdown-item" data-code="${code}" data-name="${name}">
+      ${displayText}
+    </div>`;
+  }).join('');
+
+  dropdown.querySelectorAll('.language-dropdown-item').forEach((item, index) => {
+    item.addEventListener('click', () => {
+      selectedSupportedLanguages.push({ code: item.dataset.code, name: item.dataset.name });
+      updateSupportedLanguagesDisplay();
+      const supportedInput = document.getElementById('supportedLanguagesInput');
+      if (supportedInput) supportedInput.value = '';
+      renderSupportedLanguageOptions();
+      dropdown.style.display = 'none';
+      supportedLanguageHighlightedIndex = -1;
+    });
+
+    item.addEventListener('mouseenter', () => {
+      supportedLanguageHighlightedIndex = index;
+      updateSupportedLanguageHighlight();
+    });
+  });
+
+  if (supportedLanguageHighlightedIndex >= filteredLanguages.length) {
+    supportedLanguageHighlightedIndex = filteredLanguages.length > 0 ? 0 : -1;
+  }
+  updateSupportedLanguageHighlight();
+}
+
+function saveLanguageSettingsToPlugin() {
+  parent.postMessage({
+    pluginMessage: {
+      type: 'save-language-settings',
+      languageSettings: {
+        baseLanguage: selectedBaseLanguage,
+        supportedLanguages: selectedSupportedLanguages
+      }
+    }
+  }, '*');
 }
 
 function renderProjectRadios() {
   const radioGroup = document.getElementById('projectRadioGroup');
   const tip = document.getElementById('projectEmptyTip');
   radioGroup.innerHTML = '';
+
   const projects = getProjectList();
-  console.log('[annotate-ui] renderProjectRadios', projects);
   if (!projects.length) {
     tip.style.display = '';
-    document.getElementById('create').disabled = true;
+    createBtn.disabled = true;
     return;
   }
+
   tip.style.display = 'none';
-  projects.forEach((proj, idx) => {
+  projects.forEach((proj) => {
     const label = document.createElement('label');
     label.className = 'radio-option';
     label.innerHTML = `
@@ -240,19 +1613,20 @@ function renderProjectRadios() {
     `;
     radioGroup.appendChild(label);
   });
+
   window.radioInputs = Array.from(document.querySelectorAll('input[name="project"]'));
-  window.radioLabels = Array.from(document.querySelectorAll('.radio-option'));
-  window.radioInputs.forEach(radio => {
+  window.radioLabels = Array.from(document.querySelectorAll('#projectRadioGroup .radio-option'));
+  window.radioInputs.forEach((radio) => {
     radio.addEventListener('change', () => {
-      console.log('[annotate-ui] project radio changed:', radio.value);
       validateInput();
       updateRadioStyles();
     });
   });
+
   updateRadioStyles();
   validateInput();
-  // 預設選第一個
-  if (window.radioInputs.length && !window.radioInputs.some(r => r.checked)) {
+
+  if (window.radioInputs.length && !window.radioInputs.some((r) => r.checked)) {
     window.radioInputs[0].checked = true;
     window.radioInputs[0].dispatchEvent(new Event('change', { bubbles: true }));
   }
@@ -262,67 +1636,53 @@ function getSelectedProject() {
   const radios = document.getElementsByName('project');
   for (let i = 0; i < radios.length; i++) {
     if (radios[i].checked) {
-      console.log('[annotate-ui] getSelectedProject', radios[i].value);
       return radios[i].value;
     }
   }
-  console.log('[annotate-ui] getSelectedProject null');
   return null;
 }
-
-const createBtn = document.getElementById('create');
-const input = document.getElementById('customInput');
-const errorMsg = document.getElementById('errorMsg');
-const previewContent = document.getElementById('previewContent');
 
 function validateInput() {
   const value = input.value;
   const valid = /^[A-Za-z0-9\-\_\.]+$/.test(value);
   const projects = getProjectList();
   const project = getSelectedProject();
-  console.log('[annotate-ui] validateInput', { value, valid, projects, project });
-  if (!projects.length) {
+  const position = getSelectedPosition();
+
+  if (!isBound || !hasCanvasSelection || !projects.length) {
     createBtn.disabled = true;
     errorMsg.style.display = 'none';
     return;
   }
-  if (value.length === 0 || !valid || !project) {
+
+  if (value.length === 0 || !valid || !project || !position) {
     createBtn.disabled = true;
-    errorMsg.style.display = (value.length === 0 || !project) ? 'none' : 'block';
+    errorMsg.style.display = (value.length === 0 || !project || !position) ? 'none' : 'block';
   } else {
     createBtn.disabled = false;
     errorMsg.style.display = 'none';
   }
 }
 
-input.addEventListener('input', function(e) {
+input.addEventListener('input', function() {
   this.value = this.value.replace(/[^A-Za-z0-9\-\_\.]/g, '');
-  console.log('[annotate-ui] input changed', this.value);
   validateInput();
 });
 
-// Add keyboard shortcut for create/update action
 input.addEventListener('keydown', function(e) {
-  // Check for Cmd+Enter (macOS) or Ctrl+Enter (Windows/Linux)
   if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
-    console.log('[annotate-ui] keyboard shortcut triggered - Cmd/Ctrl+Enter');
-    e.preventDefault(); // Prevent default behavior
-    
-    // Only trigger if button is enabled
+    e.preventDefault();
     if (!createBtn.disabled) {
-      console.log('[annotate-ui] executing create/update action via keyboard shortcut');
       createBtn.click();
-    } else {
-      console.log('[annotate-ui] keyboard shortcut ignored - button is disabled');
     }
   }
 });
 
 function updateRadioStyles() {
   if (!window.radioLabels) return;
-  window.radioLabels.forEach(label => {
-    const input = label.querySelector('input[type="radio"]');
-    if (input && input.checked) {
+  window.radioLabels.forEach((label) => {
+    const radioInput = label.querySelector('input[type="radio"]');
+    if (radioInput && radioInput.checked) {
       label.classList.add('selected');
     } else {
       label.classList.remove('selected');
@@ -332,28 +1692,53 @@ function updateRadioStyles() {
 
 document.addEventListener('change', function(e) {
   if (e.target.name === 'project') {
-    console.log('[annotate-ui] project radio changed (document event)', e.target.value);
     validateInput();
     updateRadioStyles();
   }
 });
 
-// 定位 radio btn 樣式與互動
 function updatePositionRadioStyles() {
-  const labels = Array.from(document.querySelectorAll('#positionRadioGroup .radio-option'));
-  labels.forEach(label => {
-    const input = label.querySelector('input[type="radio"]');
-    if (input && input.checked) {
+  const labels = Array.from(document.querySelectorAll('#positionRadioGroup .radio-option, #positionRadioGroup .pos-btn'));
+  labels.forEach((label) => {
+    const radioInput = label.querySelector('input[type="radio"]');
+    if (radioInput && radioInput.checked) {
       label.classList.add('selected');
     } else {
       label.classList.remove('selected');
     }
   });
 }
-document.querySelectorAll('#positionRadioGroup input[type="radio"]').forEach(radio => {
+
+function updateExistRadioStyles() {
+  const labels = Array.from(document.querySelectorAll('#existRadioGroup .radio-option'));
+  labels.forEach((label) => {
+    const radioInput = label.querySelector('input[type="radio"]');
+    if (radioInput && radioInput.checked) {
+      label.classList.add('selected');
+    } else {
+      label.classList.remove('selected');
+    }
+  });
+}
+
+function getExistValue() {
+  const selected = document.querySelector('input[name="existType"]:checked');
+  return selected ? selected.value === 'true' : false;
+}
+
+document.querySelectorAll('#positionRadioGroup input[type="radio"]').forEach((radio) => {
   radio.addEventListener('change', updatePositionRadioStyles);
 });
 updatePositionRadioStyles();
+
+document.querySelectorAll('input[name="existType"]').forEach((radio) => {
+  radio.addEventListener('change', () => {
+    ensureDefaultPositionForNewKey();
+    updateExistRadioStyles();
+    validateInput();
+  });
+});
+updateExistRadioStyles();
 
 function getSelectedPosition() {
   const radios = document.getElementsByName('position');
@@ -362,99 +1747,48 @@ function getSelectedPosition() {
       return radios[i].value;
     }
   }
-  return "auto";
+  return '';
 }
 
-// 接收 textContent 與 project list
-window.onmessage = (event) => {
-  const { pluginMessage } = event.data;
-  console.log('[annotate-ui] window.onmessage', pluginMessage);
-  if (pluginMessage && pluginMessage.type === 'content-result') {
-    
-    if (pluginMessage.content) {
-      previewContent.textContent = pluginMessage.content;
-      
-      // 檢查是否已標注
-      if (pluginMessage.isAnnotated) {
-        currentAnnotationInfo = {
-          uuid: pluginMessage.uuid,
-          keyName: pluginMessage.keyName,
-          projectName: pluginMessage.projectName
-        };
-                
-        // 填入已有的 key 值
-        input.value = pluginMessage.keyName || '';
-        
-        // 選中對應的 project
-        if (pluginMessage.projectName) {
-          selectProject(pluginMessage.projectName);
-        }
-        
-        // 改變按鈕文案
-        createBtn.textContent = 'Update';
-        
-        validateInput();
-      } else {
-        // Reset currentAnnotationInfo
-        currentAnnotationInfo = null;
-        
-        // Empty input
-        input.value = '';
-        
-        // Change button text
-        createBtn.textContent = 'Create';
-        
-        // 重新選中第一個 project（如果有的話）
-        const firstRadio = document.querySelector('input[name="project"]');
-        if (firstRadio) {
-          firstRadio.checked = true;
-          updateRadioStyles();
-        }
-        
-        // 重置定位選項為 Auto
-        const autoPositionRadio = document.querySelector('input[name="position"][value="auto"]');
-        if (autoPositionRadio) {
-          autoPositionRadio.checked = true;
-          updatePositionRadioStyles();
-        }
-        
-        validateInput();
-      }
-    } else {
-      previewContent.textContent = "請選取要新增 lokalise key 的字串";
-      
-      // 完全重置狀態
-      currentAnnotationInfo = null;
-      input.value = '';
-      createBtn.textContent = 'Create';
-      
-      // 重置所有選項
-      const firstRadio = document.querySelector('input[name="project"]');
-      if (firstRadio) {
-        firstRadio.checked = true;
-        updateRadioStyles();
-      }
-      
-      const autoPositionRadio = document.querySelector('input[name="position"][value="auto"]');
-      if (autoPositionRadio) {
-        autoPositionRadio.checked = true;
-        updatePositionRadioStyles();
-      }
-      
-      validateInput();
+function ensureDefaultPositionForNewKey() {
+  const isNewKey = !getExistValue();
+  const hasSelectedPosition = !!getSelectedPosition();
+  if (!isNewKey || hasSelectedPosition) {
+    return;
+  }
+  selectPosition('right');
+}
+
+function clearPositionSelection() {
+  const radios = document.getElementsByName('position');
+  for (let i = 0; i < radios.length; i++) {
+    radios[i].checked = false;
+  }
+  updatePositionRadioStyles();
+}
+
+function selectPosition(position) {
+  const positionRadios = document.getElementsByName('position');
+  let matched = false;
+  for (let i = 0; i < positionRadios.length; i++) {
+    const radio = positionRadios[i];
+    radio.checked = radio.value === position;
+    if (radio.checked) {
+      matched = true;
     }
   }
-  if (pluginMessage && pluginMessage.type === 'project-list') {
-    projectList = Array.isArray(pluginMessage.projects) ? pluginMessage.projects : [];
-    renderProjectRadios();
-    validateInput();
+  if (!matched) {
+    clearPositionSelection();
+    return;
   }
-};
+  updatePositionRadioStyles();
+  validateInput();
+}
 
-// 新增選中特定 project 的函數
 function selectProject(projectName) {
   const projectRadios = document.getElementsByName('project');
-  for (let radio of projectRadios) {
+  for (let i = 0; i < projectRadios.length; i++) {
+    const radio = projectRadios[i];
     if (radio.value === projectName) {
       radio.checked = true;
       radio.dispatchEvent(new Event('change', { bubbles: true }));
@@ -463,49 +1797,257 @@ function selectProject(projectName) {
   }
 }
 
+ensureDefaultPositionForNewKey();
+
+bindBtn.addEventListener('click', () => {
+  parent.postMessage({ pluginMessage: { type: 'bind-component' } }, '*');
+});
+
+createBindBtn.addEventListener('click', () => {
+  parent.postMessage({ pluginMessage: { type: 'create-bind-component' } }, '*');
+});
+
+settingsBtn.addEventListener('click', () => {
+  requestProjectList();
+  requestLanguageSettings();
+  showSettingsView();
+});
+
+saveSettingsBtn.addEventListener('click', () => {
+  saveLanguageSettingsToPlugin();
+});
+
+backBtn.addEventListener('click', () => {
+  if (isBound) {
+    showMainView();
+  } else {
+    showBindView();
+  }
+});
+
+unbindBtn.addEventListener('click', () => {
+  parent.postMessage({ pluginMessage: { type: 'unbind-component' } }, '*');
+});
+
 createBtn.onclick = () => {
+  if (!isBound) {
+    showBindView();
+    return;
+  }
+
   const project = getSelectedProject();
   const key = input.value;
   const valid = /^[A-Za-z0-9\-\_\.]+$/.test(key);
   const dir = getSelectedPosition();
-  
-  console.log('[annotate-ui] createBtn.onclick', { project, key, valid, dir, currentAnnotationInfo });
+  const exist = getExistValue();
 
   if (!key || !valid) {
     errorMsg.style.display = 'block';
     return;
+  }
+  errorMsg.style.display = 'none';
+
+  if (currentAnnotationInfo) {
+    parent.postMessage({
+      pluginMessage: {
+        type: 'update-annotation',
+        uuid: currentAnnotationInfo.uuid,
+        project,
+        key,
+        exist,
+        direction: dir
+      }
+    }, '*');
   } else {
-    errorMsg.style.display = 'none';
+    parent.postMessage({
+      pluginMessage: {
+        type: 'create-shapes',
+        project,
+        key,
+        exist,
+        direction: dir
+      }
+    }, '*');
   }
 
-  // 根據是否為更新模式發送不同的訊息
-  if (currentAnnotationInfo) {
-    // 更新模式
-    parent.postMessage({ 
-      pluginMessage: { 
-        type: 'update-annotation', 
-        uuid: currentAnnotationInfo.uuid,
-        project, 
-        key, 
-        direction: dir 
-      } 
-    }, '*');
-    console.log('[annotate-ui] sent update-annotation', { uuid: currentAnnotationInfo.uuid, project, key, direction: dir });
-  } else {
-    // 創建模式
-    parent.postMessage({ 
-      pluginMessage: { 
-        type: 'create-shapes', 
-        project, 
-        key, 
-        direction: dir 
-      } 
-    }, '*');
-    console.log('[annotate-ui] sent create-shapes', { project, key, direction: dir });
-  }
-  
-  input.value = "";
+  input.value = '';
   validateInput();
   input.focus();
-}
+};
+
+window.onmessage = (event) => {
+  const { pluginMessage } = event.data;
+  if (!pluginMessage) return;
+
+  if (pluginMessage.type === 'init-state') {
+    isBound = !!pluginMessage.isBound;
+    hasCanvasSelection = !!pluginMessage.hasSelection;
+    renderBoundInfo(pluginMessage.boundComponentName, pluginMessage.boundComponentKey);
+
+    projectList = normalizeProjectList(pluginMessage.projectOptions);
+    renderProjectRadios();
+    renderSettingsProjects(projectList);
+
+    updateBindButtonState();
+    if (isBound) {
+      showMainView();
+    } else {
+      showBindView();
+    }
+    validateInput();
+    return;
+  }
+
+  if (pluginMessage.type === 'selection-state') {
+    hasCanvasSelection = !!pluginMessage.hasSelection;
+    updateBindButtonState();
+    validateInput();
+    return;
+  }
+
+  if (pluginMessage.type === 'bind-success') {
+    isBound = true;
+    hasCanvasSelection = !!pluginMessage.hasSelection;
+    renderBoundInfo(pluginMessage.boundComponentName, pluginMessage.boundComponentKey);
+
+    projectList = normalizeProjectList(pluginMessage.projectOptions);
+    renderProjectRadios();
+    renderSettingsProjects(projectList);
+
+    updateBindButtonState();
+    showMainView();
+    validateInput();
+    return;
+  }
+
+  if (pluginMessage.type === 'unbind-success') {
+    isBound = false;
+    hasCanvasSelection = !!pluginMessage.hasSelection;
+    renderBoundInfo('', '');
+    projectList = [];
+    renderProjectRadios();
+    renderSettingsProjects(projectList);
+    currentAnnotationInfo = null;
+    input.value = '';
+    createBtn.textContent = 'Create';
+    updateBindButtonState();
+    showBindView();
+    validateInput();
+    return;
+  }
+
+  if (pluginMessage.type === 'content-result') {
+    if (pluginMessage.content) {
+      previewContent.textContent = pluginMessage.content;
+
+      if (pluginMessage.isAnnotated) {
+        currentAnnotationInfo = {
+          uuid: pluginMessage.uuid,
+          keyName: pluginMessage.keyName,
+          projectName: pluginMessage.projectName,
+          exist: !!pluginMessage.exist,
+          direction: pluginMessage.direction || ''
+        };
+
+        input.value = pluginMessage.keyName || '';
+        if (pluginMessage.projectName) {
+          selectProject(pluginMessage.projectName);
+        }
+        const existRadio = document.querySelector(`input[name="existType"][value="${pluginMessage.exist ? 'true' : 'false'}"]`);
+        if (existRadio) {
+          existRadio.checked = true;
+          updateExistRadioStyles();
+        }
+        if (pluginMessage.direction) {
+          selectPosition(pluginMessage.direction);
+        } else {
+          clearPositionSelection();
+          ensureDefaultPositionForNewKey();
+        }
+        createBtn.textContent = 'Update';
+        validateInput();
+      } else {
+        currentAnnotationInfo = null;
+        input.value = '';
+        createBtn.textContent = 'Create';
+
+        const firstRadio = document.querySelector('input[name="project"]');
+        if (firstRadio) {
+          firstRadio.checked = true;
+          updateRadioStyles();
+        }
+        const newRadio = document.querySelector('input[name="existType"][value="false"]');
+        if (newRadio) {
+          newRadio.checked = true;
+          updateExistRadioStyles();
+        }
+
+        ensureDefaultPositionForNewKey();
+
+        validateInput();
+      }
+    } else {
+      previewContent.textContent = 'Please select a text node to annotate.';
+      currentAnnotationInfo = null;
+      input.value = '';
+      createBtn.textContent = 'Create';
+
+      const firstRadio = document.querySelector('input[name="project"]');
+      if (firstRadio) {
+        firstRadio.checked = true;
+        updateRadioStyles();
+      }
+      const newRadio = document.querySelector('input[name="existType"][value="false"]');
+      if (newRadio) {
+        newRadio.checked = true;
+        updateExistRadioStyles();
+      }
+
+      ensureDefaultPositionForNewKey();
+
+      validateInput();
+    }
+    return;
+  }
+
+  if (pluginMessage.type === 'project-list') {
+    projectList = normalizeProjectList(pluginMessage.projects);
+    renderProjectRadios();
+    renderSettingsProjects(projectList);
+    validateInput();
+    return;
+  }
+
+  if (pluginMessage.type === 'language-settings') {
+    if (pluginMessage.languageSettings) {
+      const { baseLanguage, supportedLanguages } = pluginMessage.languageSettings;
+      if (baseLanguage && baseLanguage.code && baseLanguage.name) {
+        selectedBaseLanguage = baseLanguage;
+      }
+      if (Array.isArray(supportedLanguages)) {
+        selectedSupportedLanguages = supportedLanguages;
+      }
+    } else {
+      selectedSupportedLanguages = [...defaultSupportedLanguages];
+    }
+    updateBaseLanguageDisplay();
+    updateSupportedLanguagesDisplay();
+    return;
+  }
+
+  if (pluginMessage.type === 'save-success') {
+    if (!settingsView.classList.contains('hidden')) {
+      if (isBound) {
+        showMainView();
+      } else {
+        showBindView();
+      }
+    }
+    return;
+  }
+};
+
+initializeLanguageSettings();
+requestProjectList();
+requestLanguageSettings();
 </script>
