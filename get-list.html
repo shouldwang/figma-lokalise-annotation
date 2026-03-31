@@ -855,20 +855,18 @@ function escapeCSV(value) {
 }
 
 function generateCSVHeader() {
-  const headers = ["Project", "Key", languageSettings.baseLanguage.code];
+  const headers = ["Project", "Key", "Link", languageSettings.baseLanguage.code];
   languageSettings.supportedLanguages.forEach(lang => {
     headers.push(lang.code);
   });
-  headers.push("Link");
   return headers.map(escapeCSV).join(",");
 }
 
 function generateCSVRow(row) {
-  const rowData = [row.projectName, row.keyName, row.content];
+  const rowData = [row.projectName, row.keyName, row.frameUrl || "", row.content];
   languageSettings.supportedLanguages.forEach(() => {
     rowData.push("");
   });
-  rowData.push(row.frameUrl || "");
   return rowData.map(escapeCSV).join(",");
 }
 
