@@ -396,8 +396,8 @@
       align-items: center;
     }
     .file-url-bar-row {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
+      display: flex;
+      flex-direction: column;
       gap: 6px;
     }
     .file-url-input {
@@ -495,7 +495,7 @@ function renderFileUrlBar(justSaved = false) {
     bar.className = "file-url-bar";
     bar.style.display = "flex";
     bar.innerHTML = `
-      <span style="color:#92400e">🔗 Paste Figma URL to enable frame links</span>
+      <span style="color:#92400e">🔗 Bind Figma URL to include frame links in exported CSV</span>
       <div class="file-url-bar-row">
         <input class="file-url-input" id="figmaUrlInput" type="text" placeholder="https://www.figma.com/design/..." autocomplete="off">
         <button class="file-url-save-btn" id="saveUrlBtn">Save</button>
@@ -706,7 +706,6 @@ function renderCardList(data, editingIdx = null) {
               <button class="card-action-btn locate-btn" title="Locate">
                 📍<span class="tooltip">Locate</span>
               </button>
-              ${row.frameUrl ? `<a class="card-action-btn link-btn" href="${row.frameUrl}" target="_blank" title="Open in Figma">🔗<span class="tooltip">Open in Figma</span></a>` : ''}
               <button class="card-action-btn edit-btn" title="Edit">
                 ✏️<span class="tooltip">Edit</span>
               </button>
