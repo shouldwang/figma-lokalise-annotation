@@ -100,6 +100,17 @@ const NodeUtils = {
     return outermost;
   },
 
+  getTopLevelNode(node: BaseNode): FrameNode | null {
+    let current: BaseNode = node;
+    let topFrame: FrameNode | null = null;
+    while (current.parent && current.parent.type !== "PAGE") {
+      if (current.type === "FRAME") topFrame = current as FrameNode;
+      current = current.parent;
+    }
+    if (current.type === "FRAME") topFrame = current as FrameNode;
+    return topFrame;
+  },
+
   getAnnotationUuid(node: AnnotationNode): string {
     return node.getPluginData("uuid") || node.name.match(/-(\d+)$/)?.[1] || "";
   },
@@ -116,13 +127,13 @@ const NodeUtils = {
     return { x: t[0][2], y: t[1][2] };
   },
 
-  getPlacementContainer(textNode: TextNode): AnnotationContainer {
+  getPlacementContainer(textNode: TextNode): PageNode | FrameNode | GroupNode | ComponentNode | ComponentSetNode {
     const outermostFrame = this.getOutermostFrame(textNode);
     if (outermostFrame && outermostFrame.parent && "appendChild" in outermostFrame.parent) {
-      return outermostFrame.parent as AnnotationContainer;
+      return outermostFrame.parent as PageNode | FrameNode | GroupNode | ComponentNode | ComponentSetNode;
     }
     if (textNode.parent && "appendChild" in textNode.parent) {
-      return textNode.parent as AnnotationContainer;
+      return textNode.parent as PageNode | FrameNode | GroupNode | ComponentNode | ComponentSetNode;
     }
     return figma.currentPage;
   },
@@ -1165,16 +1176,32 @@ const AnnotationService = {
       
       const targetId = group.getPluginData('targetId');
       let content = "";
+      let frameUrl = "";
       if (targetId) {
         const textNode = await figma.getNodeByIdAsync(targetId);
         if (textNode && textNode.type === "TEXT") {
           content = textNode.characters;
+          const topFrame = NodeUtils.getTopLevelNode(textNode);
+          if (topFrame) frameUrl = buildFigmaFrameUrl(topFrame.id);
         }
       }
-      return { uuid, projectName, keyName, content, exist };
+      return { uuid, projectName, keyName, content, exist, frameUrl };
     }));
   }
 };
+
+const STORED_FILE_KEY = "storedFileKey";
+
+function parseFileKeyFromUrl(url: string): string | null {
+  const match = url.match(/figma\.com\/(?:design|file|proto)\/([a-zA-Z0-9]{10,})/);
+  return match ? match[1] : null;
+}
+
+function buildFigmaFrameUrl(nodeId: string): string {
+  const fileKey = figma.fileKey || figma.root.getPluginData(STORED_FILE_KEY) || null;
+  if (!fileKey) return "";
+  return `https://www.figma.com/design/${fileKey}?node-id=${nodeId.replace(/:/g, "-")}`;
+}
 
 // ==================== ANNOTATION CREATION ====================
 
@@ -1413,10 +1440,11 @@ const CommandHandlers = {
 
   async handleGetLokaliseList() {
     console.log("[get-lokalise-list] Start");
-    
+
     const data = await AnnotationService.getAllAnnotationData();
     console.log("[get-lokalise-list] Send lokalise-data", data);
-    figma.ui.postMessage({ type: "lokalise-data", data });
+    const storedFileKey = figma.root.getPluginData(STORED_FILE_KEY) || "";
+    figma.ui.postMessage({ type: "lokalise-data", data, fileName: figma.root.name, storedFileKey });
 
     const projects = await getBoundProjectOptions();
     console.log("[get-lokalise-list] Send project-list", projects);
@@ -1601,6 +1629,19 @@ const MessageHandlers = {
   async handleListMessages(msg: any) {
     if (msg.type === "close-plugin") {
       figma.closePlugin();
+      return;
+    }
+
+    if (msg.type === "save-figma-url") {
+      const fileKey = parseFileKeyFromUrl(msg.url || "");
+      if (fileKey) {
+        figma.root.setPluginData(STORED_FILE_KEY, fileKey);
+        const data = await AnnotationService.getAllAnnotationData();
+        const storedFileKey = fileKey;
+        figma.ui.postMessage({ type: "lokalise-data", data, fileName: figma.root.name, storedFileKey });
+      } else {
+        figma.ui.postMessage({ type: "save-figma-url-error" });
+      }
       return;
     }
 

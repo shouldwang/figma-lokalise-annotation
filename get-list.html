@@ -3,8 +3,6 @@
 <head>
   <meta charset="UTF-8">
   <title>Lokalization List</title>
-  <!-- Add JSZip library -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
   <style>
     body {
       font-family: 'Segoe UI', 'Helvetica Neue', Arial, 'Liberation Sans', 'Nimbus Sans', 'sans-serif';
@@ -183,6 +181,10 @@
     .card-action-btn:hover {
       background: #FAFAFA;
     }
+    a.card-action-btn {
+      text-decoration: none;
+      color: inherit;
+    }
     .card-action-btn[disabled] {
       color: #b3b3b3;
       border-color: #eee;
@@ -336,11 +338,13 @@
       justify-content: center;
       width: 48px;
       height: 48px;
+      aspect-ratio: 1;
+      flex-shrink: 0;
       font-size: 20px;
       background: #396af2;
       color: #fff;
       border: none;
-      border-radius: 999px;
+      border-radius: 50%;
       cursor: pointer;
       box-shadow: 0 6px 20px rgba(29, 78, 216, 0.3);
       transition: all 0.15s;
@@ -376,56 +380,64 @@
       transform: none;
     }
     
-    .dropdown-backdrop {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100vw;
-      height: 100vh;
-      background: rgba(0, 0, 0, 0.3);
-      z-index: 998;
-      display: none;
+    .file-url-bar {
+      padding: 8px 16px;
+      background: #fffbeb;
+      border-bottom: 1px solid #fde68a;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      font-size: 12px;
     }
-    
-    .dropdown-menu {
-      position: absolute;
-      bottom: 0;
-      right: 0;
-      width: 382px;
-      background: #fff;
-      border: 1px solid #e6e6e6;
-      border-radius: 8px;
-      box-shadow: 0 8px 32px rgba(0,0,0,0.12);
-      z-index: 999;
-      display: none;
-      padding: 8px 0;
-      transform-origin: bottom right;
+    .file-url-bar.configured {
+      background: #f0fdf4;
+      border-bottom-color: #bbf7d0;
+      flex-direction: row;
+      align-items: center;
     }
-    
-    .dropdown-item {
-      padding: 16px;
-      cursor: pointer;
-      font-size: 14px;
-      color: #333;
-      background: #fff;
-      transition: background 0.15s;
-      border: none;
+    .file-url-bar-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 6px;
+    }
+    .file-url-input {
+      width: 100%;
+      box-sizing: border-box;
+      border: 1px solid #d1d5db;
+      border-radius: 4px;
+      padding: 4px 8px;
+      font-size: 12px;
       outline: none;
     }
-    
-    .dropdown-item:hover:not(.disabled) {
-      background: #f5f7fa;
+    .file-url-input:focus {
+      border-color: #396af2;
     }
-    
-    .dropdown-item.disabled {
-      color: #bbb;
-      cursor: not-allowed;
-      background: #fff;
+    .file-url-save-btn {
+      background: #396af2;
+      color: #fff;
+      border: none;
+      border-radius: 4px;
+      padding: 4px 10px;
+      font-size: 12px;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+    .file-url-save-btn:hover { background: #1e40af; }
+    .file-url-status {
+      color: #16a34a;
+      font-size: 12px;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+    .file-url-error {
+      color: #dc2626;
+      font-size: 11px;
     }
   </style>
 </head>
 <body>
   <div class="sticky-bar">
+    <div id="fileUrlBar" class="file-url-bar" style="display:none"></div>
     <div class="info-bar">
       <div class="chip-group" id="projectChipGroup"></div>
       <div id="dupWarningsContainer"></div>
@@ -438,14 +450,8 @@
     <div class="fab-search-container">
       <input id="searchKey" class="fab-search-input" type="text" placeholder="Search Key">
     </div>
-    <div style="position:relative;display:inline-block;">
-      <button id="exportBtn" class="fab-export-btn" disabled>💾<span class="tooltip">Export CSV</span></button>
-      <div id="exportDropdown" class="dropdown-menu"></div>
-    </div>
+    <button id="exportBtn" class="fab-export-btn" disabled>💾<span class="tooltip">Export CSV</span></button>
   </div>
-  
-  <!-- Backdrop for dropdown -->
-  <div id="dropdownBackdrop" class="dropdown-backdrop"></div>
   
   <script>
 let currentData = [];
@@ -455,6 +461,8 @@ let searchKey = "";
 let showDupKeys = [];
 let locateCycleCursor = {};
 let projectList = [];
+let fileName = "";
+let storedFileKey = "";
 let languageSettings = {
   baseLanguage: { code: 'en', name: 'English' },
   supportedLanguages: [
@@ -465,8 +473,40 @@ let languageSettings = {
   ]
 };
 
-function getProjectList() { 
-  return projectList; 
+function getProjectList() {
+  return projectList;
+}
+
+function renderFileUrlBar(justSaved = false) {
+  const bar = document.getElementById("fileUrlBar");
+  if (storedFileKey) {
+    bar.className = "file-url-bar configured";
+    bar.style.display = "flex";
+    bar.innerHTML = justSaved
+      ? `<span style="color:#16a34a;font-weight:500">✓ Saved! Frame URL configured.</span>
+         <span class="file-url-status" id="updateUrlBtn" style="margin-left:auto;color:#6b7280;text-decoration:underline">Update</span>`
+      : `<span style="color:#16a34a">🔗 Frame URL configured</span>
+         <span class="file-url-status" id="updateUrlBtn" style="margin-left:auto;color:#6b7280;text-decoration:underline">Update</span>`;
+    bar.querySelector("#updateUrlBtn").onclick = () => {
+      storedFileKey = "";
+      renderFileUrlBar();
+    };
+  } else {
+    bar.className = "file-url-bar";
+    bar.style.display = "flex";
+    bar.innerHTML = `
+      <span style="color:#92400e">🔗 Paste Figma URL to enable frame links</span>
+      <div class="file-url-bar-row">
+        <input class="file-url-input" id="figmaUrlInput" type="text" placeholder="https://www.figma.com/design/..." autocomplete="off">
+        <button class="file-url-save-btn" id="saveUrlBtn">Save</button>
+      </div>
+      <span class="file-url-error" id="urlError" style="display:none">Invalid URL — make sure it's a figma.com/design/... URL</span>
+    `;
+    bar.querySelector("#saveUrlBtn").onclick = () => {
+      const url = bar.querySelector("#figmaUrlInput").value.trim();
+      parent.postMessage({ pluginMessage: { type: "save-figma-url", url } }, "*");
+    };
+  }
 }
 
 // --- chip group 拖拽功能 ---
@@ -666,6 +706,7 @@ function renderCardList(data, editingIdx = null) {
               <button class="card-action-btn locate-btn" title="Locate">
                 📍<span class="tooltip">Locate</span>
               </button>
+              ${row.frameUrl ? `<a class="card-action-btn link-btn" href="${row.frameUrl}" target="_blank" title="Open in Figma">🔗<span class="tooltip">Open in Figma</span></a>` : ''}
               <button class="card-action-btn edit-btn" title="Edit">
                 ✏️<span class="tooltip">Edit</span>
               </button>
@@ -802,41 +843,6 @@ function updateExportBtnAndDupWarning(data) {
   }
 }
 
-function updateExportDropdownState() {
-  const projects = getProjectList();
-  const countMap = {};
-  projects.forEach(proj => countMap[proj] = 0);
-  mergeIdenticalEntries(currentData).forEach(row => {
-    if (countMap.hasOwnProperty(row.projectName)) {
-      countMap[row.projectName]++;
-    }
-  });
-  // Download Bundle
-  const totalProjects = projects.filter(proj => countMap[proj] > 0).length;
-  const bundleCountElement = document.querySelector('.export-count[data-count-for="download-bundle"]');
-  if (bundleCountElement) {
-    bundleCountElement.textContent = `(${totalProjects} projects)`;
-  }
-  projects.forEach(proj => {
-    const item = document.querySelector(`.dropdown-item[data-action="${proj}"]`);
-    const countSpan = document.querySelector(`.export-count[data-count-for="${proj}"]`);
-    if (countSpan) countSpan.textContent = `(${countMap[proj]})`;
-    if (item) {
-      if (countMap[proj] === 0) {
-        item.classList.add("disabled");
-        item.setAttribute("tabindex", "-1");
-      } else {
-        item.classList.remove("disabled");
-        item.setAttribute("tabindex", "0");
-      }
-    }
-  });
-  // 若完全無資料，exportBtn 也 disabled
-  const exportBtn = document.getElementById("exportBtn");
-  if (currentData.length === 0) {
-    exportBtn.disabled = true;
-  }
-}
 
 // 匯出 CSV
 function escapeCSV(value) {
@@ -848,107 +854,42 @@ function escapeCSV(value) {
   return str;
 }
 
-function exportCSVNoHeader(rows, filename) {
+function generateCSVHeader() {
+  const headers = ["Project", "Key", languageSettings.baseLanguage.code];
+  languageSettings.supportedLanguages.forEach(lang => {
+    headers.push(lang.code);
+  });
+  headers.push("Link");
+  return headers.map(escapeCSV).join(",");
+}
+
+function generateCSVRow(row) {
+  const rowData = [row.projectName, row.keyName, row.content];
+  languageSettings.supportedLanguages.forEach(() => {
+    rowData.push("");
+  });
+  rowData.push(row.frameUrl || "");
+  return rowData.map(escapeCSV).join(",");
+}
+
+function exportFullCSV() {
+  const today = (new Date()).toISOString().slice(0, 10).replace(/-/g, '');
+  const safeName = (fileName || 'export').replace(/[/\\?%*:|"<>]/g, '-');
+  const mergedData = mergeIdenticalEntries(currentData);
+  const header = generateCSVHeader();
+  const rows = [header, ...mergedData.map(row => generateCSVRow(row))];
   const csv = rows.join("\n");
-  const blob = new Blob([csv], { type: "text/csv" });
+  const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8" });
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
   a.href = url;
-  a.download = filename;
+  a.download = `${safeName}-${today}.csv`;
   document.body.appendChild(a);
   a.click();
   setTimeout(() => {
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
   }, 0);
-}
-
-function generateCSVHeader() {
-  const headers = ["Key", languageSettings.baseLanguage.code];
-  languageSettings.supportedLanguages.forEach(lang => {
-    headers.push(lang.code);
-  });
-  return headers.map(escapeCSV).join(",");
-}
-
-function generateCSVRow(row) {
-  const rowData = [row.keyName, row.content];
-  // Add empty values for each supported language
-  languageSettings.supportedLanguages.forEach(() => {
-    rowData.push("");
-  });
-  return rowData.map(escapeCSV).join(",");
-}
-
-function handleExportAction(action) {
-  let rows = [];
-  let filename = "";
-  const today = (new Date()).toISOString().slice(0,10).replace(/-/g, '');
-  
-  if (action === "download-bundle") {
-    // Download all projects as separate CSV files in a ZIP
-    downloadProjectBundle(today);
-    return;
-  } else {
-    const proj = action;
-    let projRows = mergeIdenticalEntries(currentData).filter(row => row.projectName === proj);
-    // Add header for individual project export
-    const header = generateCSVHeader();
-    rows = [header, ...projRows.map(row => generateCSVRow(row))];
-    filename = `proj-${proj}-${today}.csv`;
-  }
-  exportCSVNoHeader(rows, filename);
-}
-
-// New function to download all projects as a bundle
-async function downloadProjectBundle(today) {
-  const projects = getProjectList();
-  const mergedData = mergeIdenticalEntries(currentData);
-  const projectsWithData = projects.filter(proj => 
-    mergedData.some(row => row.projectName === proj)
-  );
-  
-  if (projectsWithData.length === 0) return;
-  
-  const zip = new JSZip();
-  
-  // Add each project as a CSV file to the ZIP
-  projectsWithData.forEach(proj => {
-    const projRows = mergedData.filter(row => row.projectName === proj);
-    const header = generateCSVHeader();
-    const csvContent = [header, ...projRows.map(row => generateCSVRow(row))].join("\n");
-    
-    zip.file(`proj-${proj}-${today}.csv`, csvContent);
-  });
-  
-  // Generate and download the ZIP file
-  try {
-    const content = await zip.generateAsync({type: "blob"});
-    const url = URL.createObjectURL(content);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `lokalise-projects-bundle-${today}.zip`;
-    document.body.appendChild(a);
-    a.click();
-    setTimeout(() => {
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-    }, 0);
-  } catch (error) {
-    console.error("Error creating ZIP file:", error);
-    // Fallback to individual downloads with user confirmation
-    if (confirm(`Failed to create ZIP bundle. Download ${projectsWithData.length} files individually instead?`)) {
-      projectsWithData.forEach((proj, index) => {
-        setTimeout(() => {
-          const projRows = mergedData.filter(row => row.projectName === proj);
-          const header = generateCSVHeader();
-          const rows = [header, ...projRows.map(row => generateCSVRow(row))];
-          const filename = `proj-${proj}-${today}.csv`;
-          exportCSVNoHeader(rows, filename);
-        }, index * 1000); // 1 second delay between downloads
-      });
-    }
-  }
 }
 
 // 搜尋 key
@@ -959,80 +900,30 @@ document.getElementById('searchKey').addEventListener('input', function(e) {
   renderCardList(getFilteredData(), null);
 });
 
-// Export dropdown
 const exportBtn = document.getElementById("exportBtn");
-const exportDropdown = document.getElementById("exportDropdown");
-const dropdownBackdrop = document.getElementById("dropdownBackdrop");
 
-exportBtn.onclick = function(e) {
+exportBtn.onclick = function() {
   if (exportBtn.disabled) return;
-  const isOpen = exportDropdown.style.display === "block";
-  if (isOpen) {
-    exportDropdown.style.display = "none";
-    dropdownBackdrop.style.display = "none";
-  } else {
-    exportDropdown.style.display = "block";
-    dropdownBackdrop.style.display = "block";
-  }
-  e.stopPropagation();
+  exportFullCSV();
 };
-
-dropdownBackdrop.onclick = function() {
-  exportDropdown.style.display = "none";
-  dropdownBackdrop.style.display = "none";
-};
-
-document.addEventListener('click', function(e) {
-  exportDropdown.style.display = "none";
-  dropdownBackdrop.style.display = "none";
-});
-
-function bindExportDropdownEvents() {
-  exportDropdown.querySelectorAll('.dropdown-item').forEach(opt => {
-    opt.onclick = function() {
-      if (opt.classList.contains("disabled")) return;
-      const action = this.getAttribute('data-action');
-      handleExportAction(action);
-      exportDropdown.style.display = "none";
-      dropdownBackdrop.style.display = "none";
-    };
-  });
-}
-
-function renderExportDropdown() {
-  const exportDropdown = document.getElementById("exportDropdown");
-  const projects = getProjectList();
-  const projectsWithData = projects.filter(proj => 
-    currentData.some(row => row.projectName === proj)
-  );
-  
-  let html = `
-    <div class="dropdown-item" data-action="download-bundle" tabindex="0">
-      Download Bundle <span class="export-count" data-count-for="download-bundle">(${projectsWithData.length} projects)</span>
-    </div>
-  `;
-  projects.forEach(proj => {
-    const count = currentData.filter(row => row.projectName === proj).length;
-    if (count > 0) {
-      html += `
-        <div class="dropdown-item" data-action="${proj}" tabindex="0">
-          ${proj} <span class="export-count" data-count-for="${proj}">(${count})</span>
-        </div>
-      `;
-    }
-  });
-  exportDropdown.innerHTML = html;
-}
 
 // 處理 Figma 傳來的資料
 window.onmessage = (event) => {
   const { pluginMessage } = event.data;
   if (pluginMessage && pluginMessage.type === "lokalise-data") {
     currentData = pluginMessage.data;
+    if (pluginMessage.fileName) fileName = pluginMessage.fileName;
+    const wasEmpty = !storedFileKey;
+    if (pluginMessage.storedFileKey !== undefined) storedFileKey = pluginMessage.storedFileKey;
+    const justSaved = wasEmpty && !!storedFileKey;
     editingIndex = null;
     showDupKeys = [];
     locateCycleCursor = {};
-    updateAllUI();
+    updateAllUI(justSaved);
+  }
+  if (pluginMessage && pluginMessage.type === "save-figma-url-error") {
+    const errEl = document.getElementById("urlError");
+    if (errEl) { errEl.style.display = "inline"; }
   }
   if (pluginMessage && pluginMessage.type === "lokalise-data-updated") {
     currentData = pluginMessage.data;
@@ -1053,22 +944,19 @@ window.onmessage = (event) => {
   }
 };
 
-function updateAllUI() {
+function updateAllUI(justSaved = false) {
+  renderFileUrlBar(justSaved);
   renderProjectChipGroup();
   initChipGroupDrag();
-  renderExportDropdown();
-  bindExportDropdownEvents();
   renderCardList(getFilteredData(), editingIndex);
-  updateExportDropdownState();
+  updateExportBtnAndDupWarning(mergeIdenticalEntries(currentData));
 }
 
 window.onload = () => {
+  renderFileUrlBar();
   renderProjectChipGroup();
   initChipGroupDrag();
-  renderExportDropdown();
-  bindExportDropdownEvents();
   renderCardList([], null);
-  updateExportDropdownState();
   parent.postMessage({ pluginMessage: { type: 'get-lokalise-list' } }, '*');
   parent.postMessage({ pluginMessage: { type: 'get-projects' } }, '*');
   parent.postMessage({ pluginMessage: { type: 'get-language-settings' } }, '*');

@@ -93,6 +93,18 @@ const NodeUtils = {
         }
         return outermost;
     },
+    getTopLevelNode(node) {
+        let current = node;
+        let topFrame = null;
+        while (current.parent && current.parent.type !== "PAGE") {
+            if (current.type === "FRAME")
+                topFrame = current;
+            current = current.parent;
+        }
+        if (current.type === "FRAME")
+            topFrame = current;
+        return topFrame;
+    },
     getAnnotationUuid(node) {
         var _a;
         return node.getPluginData("uuid") || ((_a = node.name.match(/-(\d+)$/)) === null || _a === void 0 ? void 0 : _a[1]) || "";
@@ -1100,16 +1112,31 @@ const AnnotationService = {
                 ((_d = (_c = group.findOne(n => n.type === "TEXT" && String(n.name || "").includes("Exist"))) === null || _c === void 0 ? void 0 : _c.visible) !== null && _d !== void 0 ? _d : false);
             const targetId = group.getPluginData('targetId');
             let content = "";
+            let frameUrl = "";
             if (targetId) {
                 const textNode = await figma.getNodeByIdAsync(targetId);
                 if (textNode && textNode.type === "TEXT") {
                     content = textNode.characters;
+                    const topFrame = NodeUtils.getTopLevelNode(textNode);
+                    if (topFrame)
+                        frameUrl = buildFigmaFrameUrl(topFrame.id);
                 }
             }
-            return { uuid, projectName, keyName, content, exist };
+            return { uuid, projectName, keyName, content, exist, frameUrl };
         }));
     }
 };
+const STORED_FILE_KEY = "storedFileKey";
+function parseFileKeyFromUrl(url) {
+    const match = url.match(/figma\.com\/(?:design|file|proto)\/([a-zA-Z0-9]{10,})/);
+    return match ? match[1] : null;
+}
+function buildFigmaFrameUrl(nodeId) {
+    const fileKey = figma.fileKey || figma.root.getPluginData(STORED_FILE_KEY) || null;
+    if (!fileKey)
+        return "";
+    return `https://www.figma.com/design/${fileKey}?node-id=${nodeId.replace(/:/g, "-")}`;
+}
 // ==================== ANNOTATION CREATION ====================
 const AnnotationCreator = {
     async createAnnotation(textNode, key, project, direction = "top", exist = false) {
@@ -1311,7 +1338,8 @@ const CommandHandlers = {
         console.log("[get-lokalise-list] Start");
         const data = await AnnotationService.getAllAnnotationData();
         console.log("[get-lokalise-list] Send lokalise-data", data);
-        figma.ui.postMessage({ type: "lokalise-data", data });
+        const storedFileKey = figma.root.getPluginData(STORED_FILE_KEY) || "";
+        figma.ui.postMessage({ type: "lokalise-data", data, fileName: figma.root.name, storedFileKey });
         const projects = await getBoundProjectOptions();
         console.log("[get-lokalise-list] Send project-list", projects);
         figma.ui.postMessage({ type: "project-list", projects });
@@ -1475,6 +1503,19 @@ const MessageHandlers = {
     async handleListMessages(msg) {
         if (msg.type === "close-plugin") {
             figma.closePlugin();
+            return;
+        }
+        if (msg.type === "save-figma-url") {
+            const fileKey = parseFileKeyFromUrl(msg.url || "");
+            if (fileKey) {
+                figma.root.setPluginData(STORED_FILE_KEY, fileKey);
+                const data = await AnnotationService.getAllAnnotationData();
+                const storedFileKey = fileKey;
+                figma.ui.postMessage({ type: "lokalise-data", data, fileName: figma.root.name, storedFileKey });
+            }
+            else {
+                figma.ui.postMessage({ type: "save-figma-url-error" });
+            }
             return;
         }
         if (msg.type === "update-row") {
