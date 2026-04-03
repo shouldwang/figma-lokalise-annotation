@@ -1,7 +1,7 @@
 # Figma Lokalise Annotation Plugin — Product Spec
 
-> Version: 2.0
-> Last updated: 2026-03-15
+> Version: 2.1
+> Last updated: 2026-04-03
 
 ## 概覽
 
@@ -194,30 +194,41 @@
 
 #### UI
 
+- **File URL settings bar**（sticky bar 最上方）：
+  - 未設定時顯示黃色背景，提示貼上 Figma 檔案 URL 以啟用 Link 欄位
+  - 已設定時顯示綠色背景，顯示已儲存狀態（可點擊重設）
+  - 包含文字輸入欄位與 `Save` 按鈕
 - **Sticky project chip bar**：各 Project 的篩選 chip，可拖拉捲動，`All` 為預設
 - **Duplicate warning block**（紅色）：列出有衝突的 Key 名稱
 - **Card list**：
   - 每張 card 顯示：Project label、item count、exist indicator、Key 名稱（monospace）、Text 內容預覽
   - Action buttons：Locate / Edit / Delete
 - **FAB search input**：浮動搜尋欄，輸入過濾 Key 名稱
-- **Export button**：浮動，觸發匯出選單
+- **Export button**：浮動，點擊直接下載完整 CSV（含全部 Project）
 
 #### Plugin Message API
 
 | 方向 | Message type | Payload |
 |------|-------------|---------|
 | UI → Plugin | `get-lokalise-list` | — |
-| Plugin → UI | `lokalise-data` | `{ data: AnnotationData[] }` |
+| Plugin → UI | `lokalise-data` | `{ data: AnnotationData[], fileName: string, storedFileKey: string }` |
 | UI → Plugin | `locate-row` | `{ uuid }` |
+| UI → Plugin | `save-figma-url` | `{ url: string }` |
+| Plugin → UI | `save-figma-url-error` | — |
 
 #### 程式邏輯
 
 1. 接收 `get-lokalise-list`：
    - 掃描 `figma.currentPage` 找出所有 Annotation 節點
    - 讀取每個節點的 plugin data，組成 `AnnotationData[]`
-   - 回傳給 UI
-2. Duplicate 偵測：將 `data` 依 `projectName + keyName` 分組，相同 key 但 content 不同者標記為衝突
-3. 接收 `locate-row`：
+   - 對每個 annotation，呼叫 `NodeUtils.getTopLevelNode()` 取得對應最上層 Frame，配合 `storedFileKey` 組出 `frameUrl`
+   - 回傳給 UI，附帶 `fileName`（`figma.root.name`）與 `storedFileKey`
+2. 接收 `save-figma-url`：
+   - 以正規表達式解析 URL 中的 fileKey（`/figma\.com\/(?:design|file|proto)\/([a-zA-Z0-9]{10,})/`）
+   - 成功則存入 `figma.root.setPluginData("storedFileKey", fileKey)`，重新回傳 `lokalise-data`
+   - 失敗則回傳 `save-figma-url-error`
+3. Duplicate 偵測：將 `data` 依 `projectName + keyName` 分組，相同 key 但 content 不同者標記為衝突
+4. 接收 `locate-row`：
    - 從 index 找到 Annotation 節點
    - `figma.viewport.scrollAndZoomIntoView([node])`
    - `figma.currentPage.selection = [node]`
@@ -277,34 +288,37 @@
 
 #### Acceptance Criteria
 
-- 可匯出單一 Project 的 CSV，或下載包含所有 Project 的 ZIP
-- CSV 格式：第一列為 header（Key + 各語言 code），後續每列一個 Key
+- 點擊 Export 直接下載包含全部 Project 的單一 CSV
+- CSV 格式：第一列為 header（Key、Link、Project + 各語言 code），後續每列一個 Key
 - 語言欄位的 header 來自 Language Settings
 - 已存在的 Key（`exist === true`）與新 Key 都包含在內
+- CSV 使用 UTF-8 BOM 編碼，確保 Excel 正確顯示中文
+- 檔名使用 Figma 檔案根節點名稱（`figma.root.name`）
 
 #### UI
 
 - **Export button**（浮動在清單右下角）
-- 點擊後顯示下拉選單：
-  - 各 Project 個別匯出選項
-  - `Download All (ZIP)` 選項
+- 點擊直接下載 CSV，不再顯示下拉選單
 
 #### CSV 格式
 
 ```
-Key,en,ja,zh_TW,en_US,zh_CN
-button.submit,Submit,,,
-page.title,Home Page,,,
+Key,Link,Project,en,ja,zh_TW,en_US,zh_CN
+button.submit,https://www.figma.com/design/xxx?node-id=1-2,MyProject,Submit,,,
+page.title,,MyProject,Home Page,,,
 ```
+
+- `Link` 欄位：若已設定 Figma 檔案 URL，填入對應最上層 Frame 的 Figma 直連網址；否則留空
+- `Link` 欄位排在 `Key` 之後、`Project` 之前
 
 #### 程式邏輯（全在 UI/前端執行）
 
-1. 從 Plugin 取得的 `AnnotationData[]` 依 `projectName` 分組
+1. 從 Plugin 取得的 `AnnotationData[]`（已含 `frameUrl`）讀取資料
 2. 讀取 `languageSettings`（`baseLanguage` + `supportedLanguages`）
-3. 組合 header row：`Key, {baseLanguage.code}, {supportedLanguages.map(l => l.code)}`
-4. 每筆 annotation 產生一 row：`keyName, content, (空欄 × supported language 數量)`
-5. 單一 Project 匯出：建立 Blob，觸發 `<a>` download
-6. All ZIP：使用 `JSZip` 將所有 Project CSV 打包成 `.zip` 下載
+3. 組合 header row：`Key, Link, Project, {baseLanguage.code}, {supportedLanguages.map(l => l.code)}`
+4. 每筆 annotation 產生一 row：`keyName, frameUrl, projectName, content, (空欄 × supported language 數量)`
+5. 加上 UTF-8 BOM（`\uFEFF`），建立 Blob，觸發 `<a>` download
+6. 檔名：`{fileName}.csv`（`fileName` 來自 Plugin 回傳的 `figma.root.name`）
 
 ---
 
@@ -397,6 +411,7 @@ interface AnnotationData {
   keyName: string      // Localization key
   content: string      // 對應 Text node 的文字內容
   exist: boolean       // true = 已存在的 Key，false = 新 Key
+  frameUrl: string     // 對應最上層 Frame 的 Figma 直連網址（未設定 fileKey 時為空字串）
 }
 ```
 
@@ -413,7 +428,7 @@ interface AnnotationData {
 | `annotationType` | `"component"` | 識別為 Annotation 節點用 |
 | `componentKey` | string | 使用的元件 key |
 
-### ClientStorage Keys
+### ClientStorage Keys（`figma.clientStorage`，跨檔案持久化）
 
 | Key | 說明 |
 |-----|------|
@@ -424,6 +439,12 @@ interface AnnotationData {
 | `annotationComponentSetNodeId` | 元件 Set 的 Node ID |
 | `annotationProjectOptions` | 快取的 Project 選項 |
 | `languageSettings` | 語言設定 |
+
+### Root Plugin Data（`figma.root.getPluginData / setPluginData`，per-file 持久化）
+
+| Key | 說明 |
+|-----|------|
+| `storedFileKey` | 使用者貼入的 Figma 檔案 URL 所解析出的 fileKey，用於組合 Frame 直連網址 |
 
 ---
 
